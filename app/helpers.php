@@ -91,3 +91,30 @@ function create_captcha(int $number, string $type = 'figure'):string{
     }
     return $resstr;
 }
+
+/**
+ * 将包含英文逗号的字符串(以英文逗号隔开的字符串参数)转换成数组
+ *
+ * @param string $str 以英文逗号隔开的字符串
+ * @return Array
+ */
+function comma_str_to_array(string $str):Array {
+    $array = explode(',', $str);
+    $res = [];
+    foreach($array as $value){  // 空字符串时, 上一步得到的结果为 ['']
+        if($value != ''){
+            $res[] = $value;
+        }
+    }
+    return $res;
+}
+
+/**
+ * 将数组转换为以英文逗号隔开的字符串
+ *
+ * @param array $array
+ * @return string
+ */
+function array_to_comma_str(array $array):string {
+    return implode(',', $array);
+}
