@@ -191,6 +191,7 @@ class UserController extends BaseController
                 //判断是否填写了密码，并加密
                 $form->saving(function (Form $form) {
                     $form->avatar = $form->avatar ?? '';
+                    $form->nickname = $form->nickname ?? '';
                     if($form->password == null){
                         $form->deleteInput('password');
                     }else{

@@ -118,3 +118,25 @@ function comma_str_to_array(string $str):Array {
 function array_to_comma_str(array $array):string {
     return implode(',', $array);
 }
+
+/**
+ * 二维码生成
+ *
+ * @param string $url 链接
+ * @param string $identity 标识(文件名)
+ * @return void
+ */
+function qrcode($url, $identity){
+    include_once '../extend/phpqrcode/qrlib.php'; //放在extend中
+     //vendor('phpqrcode.phpqrcode'); //放在vender中
+     $errorCorrectionLevel = 'H'; //容错级别
+     $matrixPointSize = 5; //图片大小慢慢自己调整，只要是int就行
+     $path = '../storage/qrcode/';
+     $QR = $QRB = $path . $identity . ".png";
+     QRcode::png($url, $QR, $errorCorrectionLevel, $matrixPointSize, 2);
+     if(file_exists($path . $identity . ".png")){
+         return config("app.url") . "/storage/qrcode/" . $identity . ".png";
+     }else{
+         return false;
+     }
+ }

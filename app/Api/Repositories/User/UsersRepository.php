@@ -101,4 +101,27 @@ class UsersRepository extends BaseRepository{
     public function verify_password($user_obj, $password){
         return password_verify($password, $user_obj->password);
     }
+
+    /**
+     * 获取邀请二维码
+     *
+     * @param integer $uid 会员id
+     * @param string $url 邀请链接
+     * @return string
+     */
+    public function get_invite_qrcode(int $uid, string $url):string{
+        $save_url = Redis::get("invite_url:{$uid}");
+        if($save_url && $save_url == $url){  // 判断链接是否一致
+            $invite_qrcode = Redis::get("invite_qrcode:{$uid}");
+            if(!$invite_qrcode){  // 判断二维码是否存在
+                $invite_qrcode = qrcode($url, $uid);
+                Redis::set("invite_qrcode:{$uid}", $invite_qrcode);
+            }
+        }else{
+            Redis::set("invite_url:{$uid}", $url);
+            $invite_qrcode = qrcode($url, $uid);
+            Redis::set("invite_qrcode:{$uid}", $invite_qrcode);
+        }
+        return $invite_qrcode;
+    }
 }
