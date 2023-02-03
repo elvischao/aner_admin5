@@ -79,7 +79,7 @@ class SysNoticeController extends BaseController
     protected function form()
     {
         return Form::make(new SysNotice(), function (Form $form) {
-            $form->display('id');
+            $form->hidden('id');
             config('admin.notice.image_show') ? $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required() : '';
             $form->text('title')->required();
             switch(config('admin.notice.type')) {
@@ -95,6 +95,12 @@ class SysNoticeController extends BaseController
             }
             $form->saving(function (Form $form) {
                 $form->content = $form->content ?? '';
+            });
+            $form->saved(function(Form $form, $result){
+                (new SysNotice())->del_cache_data($form->id);
+            });
+            $form->deleted(function (Form $form, $result) {
+                (new SysNotice())->del_cache_data($form->id);
             });
             $form->disableViewCheck();
             $form->disableEditingCheck();

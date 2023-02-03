@@ -33,6 +33,19 @@ class SysController extends BaseController{
     }
 
     /**
+     * 获取公告列表
+     *
+     * @param Request $request
+     * @return void
+     */
+    public function notice_list(Request $request){
+        $page = $request->input("page", 1) ?? 1;
+        $limit = $request->input("limit", 10) ?? 10;
+        $data = $this->service->get_notice_list($page, $limit);
+        return success('公告列表', $data);
+    }
+
+    /**
      * 获取指定广告，如果是广告位则获取广告位下所有广告
      *
      * @param Request $request

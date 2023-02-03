@@ -15,7 +15,7 @@ class SysBannerRepository extends BaseRepository{
      */
     public function get_all(){
         $values = Redis::hvals("banner");
-        if($values){
+        if(!$values){
             self::set_all();
             $values = Redis::hvals("banner");
         }

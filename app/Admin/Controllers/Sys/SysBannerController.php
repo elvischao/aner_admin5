@@ -40,6 +40,7 @@ class SysBannerController extends BaseController
             $form->display('id');
             $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required();
             config('admin.banner.url_show') ? $form->text('url')->required() : '';
+            // 因为banner图在接口中是直接缓存的，需要删除缓存已达到更新目的
             $form->saved(function(Form $form, $result){
                 (new SysBanner())->del_cache_data();
             });

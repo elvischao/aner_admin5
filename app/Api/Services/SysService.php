@@ -28,7 +28,7 @@ class SysService{
      * @param integer $id
      * @return void 单条的公告信息
      */
-    public function get_notice(int $id = 0){
+    public function get_notice(int $id = 0):\Illuminate\Database\Eloquent\Model{
         $SysNoticeRepository = new SysNoticeRepository();
         $sys_image_show = config('admin.notice.image_show');
         switch(config('admin.notice.type')){
@@ -65,7 +65,7 @@ class SysService{
      * @param integer $limit 每页展示数据数量
      * @return void
      */
-    public function get_notice_list(int $page = 1, int $limit = 10){
+    public function get_notice_list(int $page = 1, int $limit = 10):\Illuminate\Database\Eloquent\Collection{
         $SysNoticeRepository = new SysNoticeRepository();
         $sys_image_show = config('admin.notice.image_show');
         if(config('admin.notice.type') != '多条富文本'){

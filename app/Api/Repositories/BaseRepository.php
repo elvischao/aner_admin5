@@ -12,6 +12,13 @@ use Illuminate\Support\Facades\Redis;
  */
 class BaseRepository{
     protected $eloquentClass;
+    protected $cache_expiration_time;
+    protected $cache_onoff;
+
+    public function __construct(bool $cache_onoff = true, int $cache_expiration_time = 86400){
+        $this->cache_onoff = $cache_onoff;
+        $this->cache_expiration_time = $cache_expiration_time;
+    }
 
     /**
      * 创建数据
@@ -33,12 +40,19 @@ class BaseRepository{
      * @param array $where 查询条件，二维数组，每个子数组中有三个元素，例如: ['id', '=', 1], ['status', 'in', [1, 2]]
      * @return int
      */
-    public function use_field_get_id($where = []){
-        $key = md5(json_encode($where));
-        return Cache::remember("ufgi:{$this->eloquentClass}:{$key}", 86400, function() use($where){
-            $obj = $this->many_where_select($where);
-            return $obj->value('id') ?? 0;
-        });
+    public function use_field_get_id($where = []):int{
+        switch($this->cache_onoff){
+            case true:
+                $key = md5(json_encode($where));
+                $res_id = Cache::remember("ufgi:{$this->eloquentClass}:{$key}", $this->cache_expiration_time, function() use($where){
+                    return $this->many_where_select($where)->value('id') ?? 0;
+                });
+                break;
+            case false:
+                $res_id = $this->many_where_select($where)->value('id') ?? 0;
+                break;
+        }
+        return $res_id;
     }
 
     /**
@@ -54,27 +68,31 @@ class BaseRepository{
      * @return json
      */
     public function use_field_get_data($where = [], $select = ['*']){
-        // 无论什么条件，都获取到指定id
-        $id = $this->use_field_get_id($where);
-        if($id == 0){
-            return json_decode(json_encode([]));
-        }
-        // 根据id获取此行所有字段的数据 (这里进行了缓存)
-        $res = Cache::remember("ufgd:{$this->eloquentClass}:{$id}", 86400, function() use($id){
-            return $this->eloquentClass::find($id);
-        });
-        // 根据select条件，将指定参数加入到返回数据中
-        $data = [];
-        if($res){
-            foreach ($select as $value) {
-                if($value == "*"){
-                    $data = $res;
-                    break;
+        switch($this->cache_onoff){
+            case true:  // 有缓存
+                // 根据查询条件获取id，如果查询条件中有id，则直接使用
+                $id = 0;
+                foreach($where as $field){
+                    if($field[0] == 'id'){
+                        $id = $field[2];
+                        break;
+                    }
                 }
-                $data[$value] = $res->$value;  # 参数不存在会返回null
-            }
+                $id = $id == 0 ? $this->use_field_get_id($where) : $id;
+                if($id == 0){
+                    return null;
+                }
+                // 根据 where 和 select 条件进行缓存，筛选条件作为缓存主表示，数据id作为标签(删除用)
+                $key = md5(json_encode($where) . json_encode($select));
+                $data = Cache::tags(["{$this->eloquentClass}:{$id}"])->remember("ufgd:{$this->eloquentClass}:{$key}", $this->cache_expiration_time, function() use($where, $select){
+                    return $this->many_where_select($where, $select)->first();
+                });
+                break;
+            case false:  // 无缓存
+                $data = $this->many_where_select($where, $select)->first();
+                break;
         }
-        return json_decode(json_encode($data));  # 将数组或模型对象统一转换成json对象
+        return $data;
     }
 
     /**
@@ -105,7 +123,7 @@ class BaseRepository{
         }
         $list_count = count($data);
         if($list_count > 0){
-            Redis::setex("listid:{$key}:{$page}", 86400, $data[$list_count - 1]['id']);
+            Redis::setex("listid:{$key}:{$page}", $this->cache_expiration_time, $data[$list_count - 1]['id']);
         }
         return $data;
     }
@@ -186,7 +204,7 @@ class BaseRepository{
      * @return void
      */
     public function delete_select_cache($id){
-        Cache::forget("ufgd:{$this->eloquentClass}:{$id}");
+        Cache::tags(["{$this->eloquentClass}:{$id}"])->flush();
     }
 
     /**

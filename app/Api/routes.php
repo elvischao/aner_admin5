@@ -15,6 +15,7 @@ Route::post('register', [\App\Api\Controllers\LoginController::class, 'phone_reg
 
 Route::post('sys/banner', [\App\Api\Controllers\SysController::class, 'banner']);
 Route::post('sys/notice', [\App\Api\Controllers\SysController::class, 'notice']);
+Route::post('sys/notice/list', [\App\Api\Controllers\SysController::class, 'notice_list']);
 Route::post('sys/ad', [\App\Api\Controllers\SysController::class, 'ad']);
 
 Route::group([

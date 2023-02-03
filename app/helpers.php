@@ -13,7 +13,7 @@ const ERROR_CODE = 500;
  * @param array $data 返回数据
  * @return void
  */
-function error(string $msg, array $data = []){
+function error(string $msg, array|Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model $data = []){
     return return_data(ERROR_CODE, $msg, $data);
 }
 
@@ -24,7 +24,7 @@ function error(string $msg, array $data = []){
  * @param array $data 返回数据
  * @return void
  */
-function success(string $msg, array $data = []){
+function success(string $msg, array|Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model $data = []){
     return return_data(SUCCESS_CODE, $msg, $data);
 }
 
@@ -46,7 +46,7 @@ function throwBusinessException(string $msg){
  * @param array $data 返回数据
  * @return void
  */
-function return_data(int $code, string $msg, array $data){
+function return_data(int $code, string $msg, array|Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model $data){
     return response()->json(['code'=> $code, 'msg'=> $msg, 'data'=> $data], 200); # 此 200 为真正的 http 状态码
 }
 
@@ -131,11 +131,11 @@ function qrcode($url, $identity){
      //vendor('phpqrcode.phpqrcode'); //放在vender中
      $errorCorrectionLevel = 'H'; //容错级别
      $matrixPointSize = 5; //图片大小慢慢自己调整，只要是int就行
-     $path = '../storage/qrcode/';
+     $path = './qrcode/';
      $QR = $QRB = $path . $identity . ".png";
      QRcode::png($url, $QR, $errorCorrectionLevel, $matrixPointSize, 2);
      if(file_exists($path . $identity . ".png")){
-         return config("app.url") . "/storage/qrcode/" . $identity . ".png";
+         return config("app.url") . "/qrcode/" . $identity . ".png";
      }else{
          return false;
      }

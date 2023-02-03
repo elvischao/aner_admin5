@@ -10,6 +10,9 @@ use App\Api\Services\Trigonal\FileUploadService;
 
 
 class BaseController extends Controller{
+    protected $uid;
+    protected $setting;
+
     public function __construct(Request $request){
         // 获取当前登录的会员信息
         if($request->hasHeader('token')){
