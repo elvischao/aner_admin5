@@ -119,6 +119,22 @@ function array_to_comma_str(array $array):string {
     return implode(',', $array);
 }
 
+
+/**
+ * 从一个数据列表中获取指定字段
+ *
+ * @param \Illuminate\Database\Eloquent\Collection $data_list
+ * @param string $field
+ * @return void
+ */
+function get_collection_field(\Illuminate\Database\Eloquent\Collection $data_list, string $field){
+    $data = [];
+    foreach($data_list as $value){
+        $data[] = $value->$field;
+    }
+    return $data;
+}
+
 /**
  * 二维码生成
  *

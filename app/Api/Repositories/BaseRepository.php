@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Redis;
  */
 class BaseRepository{
     protected $eloquentClass;
-    protected $cache_expiration_time;
-    protected $cache_onoff;
+    protected $cache_expiration_time;  # 缓存的保存时间
+    protected $cache_onoff;  # 缓存是否开启
 
     public function __construct(bool $cache_onoff = true, int $cache_expiration_time = 86400){
         $this->cache_onoff = $cache_onoff;

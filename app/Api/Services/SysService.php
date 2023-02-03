@@ -4,6 +4,8 @@ namespace App\Api\Services;
 use App\Api\Repositories\Sys\SysBannerRepository;
 use App\Api\Repositories\Sys\SysNoticeRepository;
 use App\Api\Repositories\Sys\SysAdRepository;
+use App\Api\Repositories\Article\ArticleRepository;
+
 
 class SysService{
     /**
@@ -93,6 +95,42 @@ class SysService{
             foreach($data as $key=> $value){
                 $data[$key] = json_decode($value);
             }
+        }
+        return $data;
+    }
+
+    /**
+     * 获取文章列表
+     *
+     * @param integer $category_id
+     * @param integer $page
+     * @param integer $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function get_article_list(int $category_id, int $page = 1, int $limit = 10):\Illuminate\Database\Eloquent\Collection{
+        $where = [];
+        if($category_id != 0){
+            $where[] = ['category_id'=> $category_id];
+        }
+        $ArticleRepository = new ArticleRepository();
+        $data = $ArticleRepository->use_fields_get_list($where, $page, $limit, ['id', 'desc'], ['id', 'tag_ids', 'category_id', 'title', 'author', 'intro', 'keyword', 'image', 'content', 'created_at']);
+        foreach($data as &$v){
+            $v = $ArticleRepository->disposal_data($v);
+        }
+        return $data;
+    }
+
+    /**
+     * 获取文章详情
+     *
+     * @param integer $id
+     * @return \Illuminate\Database\Eloquent\Model
+     */
+    public function get_article_detail(int $id):\Illuminate\Database\Eloquent\Model{
+        $ArticleRepository = new ArticleRepository();
+        $data = $ArticleRepository->use_field_get_data([['id', '=', $id]], ['id', 'tag_ids', 'category_id', 'title', 'author', 'intro', 'keyword', 'image', 'content', 'created_at']);
+        foreach($data as &$v){
+            $v = $ArticleRepository->disposal_data($v);
         }
         return $data;
     }
