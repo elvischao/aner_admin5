@@ -8,19 +8,24 @@ use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use App\Admin\Controllers\BaseController;
 
-class SysBannerController extends BaseController
-{
+class SysBannerController extends BaseController{
     /**
      * Make a grid builder.
      *
      * @return Grid
      */
-    protected function grid()
-    {
+    protected function grid(){
+        if(config('admin.banner.banner_show') == false){
+            return admin_error('error', '当前已关闭轮播图功能，请删除此目录或联系管理员打开轮播图功能');
+        }
         return Grid::make(new SysBanner(), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('image')->image('', 60, 60);
-            config('admin.banner.url_show') ? $grid->column('url') : '';
+            if(config('admin.banner.url_show')){
+                $grid->column('url');
+            }
+
+            $grid->disableFilterButton();
             $grid->disableViewButton();
 
             $grid->filter(function (Grid\Filter $filter) {
@@ -34,19 +39,20 @@ class SysBannerController extends BaseController
      *
      * @return Form
      */
-    protected function form()
-    {
+    protected function form(){
         return Form::make(new SysBanner(), function (Form $form) {
+            $form->tools(function (Form\Tools $tools) {
+                $tools->disableView();
+                $tools->disableDelete();
+            });
             $form->display('id');
             $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required();
-            config('admin.banner.url_show') ? $form->text('url')->required() : '';
-            // 因为banner图在接口中是直接缓存的，需要删除缓存已达到更新目的
-            $form->saved(function(Form $form, $result){
-                (new SysBanner())->del_cache_data();
-            });
-            $form->deleted(function (Form $form, $result) {
-                (new SysBanner())->del_cache_data();
-            });
+            if(config('admin.banner.url_show')){
+                $form->text('url')->required();
+            }
+            $form->disableViewCheck();
+            $form->disableEditingCheck();
+            $form->disableCreatingCheck();
         });
     }
 }

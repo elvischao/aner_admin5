@@ -1,5 +1,5 @@
 <?php
-namespace App\Api\Services\Trigonal;
+namespace App\Api\Services;
 
 use Illuminate\Support\Facades\Redis;
 
@@ -24,7 +24,7 @@ class SmsService{
      * @param int $sms_code
      * @return bool
      */
-    public function send($phone, $sms_code){
+    public function send(string $phone, int $sms_code){
         return true;
     }
 }

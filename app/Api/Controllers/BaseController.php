@@ -5,7 +5,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 
 use App\Api\Services\UserService;
-use App\Api\Services\Trigonal\SmsService;
+use App\Api\Services\SmsService;
 use App\Api\Services\Trigonal\FileUploadService;
 
 

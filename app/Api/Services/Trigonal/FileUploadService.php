@@ -1,10 +1,24 @@
 <?php
 namespace App\Api\Services\Trigonal;
 
+use Qiniu\Auth;
+use Qiniu\Config;
+use Qiniu\Storage\ArgusManager;
 use zgldh\QiniuStorage\QiniuStorage;
 
 class FileUploadService{
     protected $allowed_ext = ["png", "jpg", "gif", 'jpeg', 'mp4', 'mp3'];
+    protected $disk;
+    protected $directory;
+    protected $accessKey;
+    protected $secretKey;
+    protected $qiniu_doman;
+
+    public function __construct(){
+        $this->accessKey = config('filesystems.disks.qiniu.access_key');
+        $this->secretKey = config('filesystems.disks.qiniu.secret_key');
+        $this->qiniu_doman = config('filesystems.disks.qiniu.domains.default');
+    }
 
     /**
      * 上传图片
@@ -16,7 +30,10 @@ class FileUploadService{
         $this->disk = config('filesystems.default');
         $this->directory = 'uploads/images/' . date('Y-m', time()) . '/';
         $upload_function = 'upload2' . $this->disk;
-        return $this->$upload_function($file);
+        $filename = $this->$upload_function($file);
+        // $this->qiniu_图片鉴黄审核($filename);
+        // TODO::添加开关
+        return $filename;
     }
 
     /**
@@ -42,6 +59,7 @@ class FileUploadService{
         $file_data = $this->rename($file);
         $bool = $disk->put($file_data['directory_file_name'], file_get_contents($file->getRealPath()));
         if($bool){
+            // $path = 'http://' . $this->qiniu_doman . '/' . $file_data['directory_file_name'];
             $path = $disk->downloadUrl($file_data['directory_file_name']);
             return $path;
         }
@@ -66,5 +84,32 @@ class FileUploadService{
             'directory_file_name'=> $directory_file_name,
             'full_path_file_name'=> $full_path_file_name
         ];
+    }
+
+    public function qiniu_图片鉴黄审核(string $image_url){
+        $auth = new Auth($this->accessKey, $this->secretKey);
+        $config = new Config();
+        $argusManager = new ArgusManager($auth, $config);
+        $body = '{
+            "data":{
+                "uri":"' . $image_url . '"
+            },
+            "params":{
+                "scenes":[
+                    "pulp"
+                ]
+            }
+        }';
+        list($ret, $err) = $argusManager->censorImage($body);
+        if($err != null){
+            throwBusinessException($err);
+        }
+        if($ret['code'] != 200){
+            throwBusinessException($ret['message']);
+        }
+        if($ret['result']['suggestion'] != 'pass'){
+            throwBusinessException('上传的图片未通过审核');
+        }
+        return true;
     }
 }

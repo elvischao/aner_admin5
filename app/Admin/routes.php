@@ -14,13 +14,14 @@ Route::group([
 
     $router->get('/', 'HomeController@index');
     $router->resource('users', 'UserController');
+    $router->get("get/users", "UserController@get_users");
     $router->resource('article/category', 'Article\ArticleCategoryController');
     $router->resource('article/tag', 'Article\ArticleTagController');
     $router->resource('article', 'Article\ArticleController');
 
     $router->resource('sys/notice', 'Sys\SysNoticeController');
     $router->resource('sys/banner', 'Sys\SysBannerController');
-    $router->resource('sys/ad', 'Sys\SysAdController');
+    $router->resource('sys/sysad', 'Sys\SysAdController');
     $router->resource('sys/setting', 'Sys\SysSettingController');
     $router->resource('sys/setting/tab', 'Sys\SysSettingController@tab');
 

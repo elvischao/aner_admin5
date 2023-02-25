@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Redis;
  */
 class BaseRepository{
     protected $eloquentClass;
-    protected $cache_expiration_time;  # 缓存的保存时间
-    protected $cache_onoff;  # 缓存是否开启
+    protected int $cache_expiration_time;  # 缓存的保存时间
+    protected bool $cache_onoff;  # 缓存是否开启
 
     public function __construct(bool $cache_onoff = true, int $cache_expiration_time = 86400){
         $this->cache_onoff = $cache_onoff;
@@ -23,33 +23,40 @@ class BaseRepository{
     /**
      * 创建数据
      *
-     * @param array $field_values
-     * @return bool
+     * @param array $field_values 数据集
+     * @return int 返回新添加数据的id
      */
-    public function create_data($field_values){
-        return boolval($this->eloquentClass::create($field_values));
+    public function base_create_data(array $field_values):int{
+        try{
+            $res_data = $this->eloquentClass::create($field_values);
+        }catch(\Throwable $th){
+            throwBusinessException($th->getMessage());
+        }
+        return $res_data->id;
     }
 
     /**
      * 通过某个字段获取数据的id
      *
-     * 对某表某字段某值对应的id号进行缓存，1天后过期
-     * 即使修改此字段此行内容，下次获取时因为 value 变化了，不会命中旧的缓存，而是会新生成一条缓存。
-     * 如果修改了其他字段，则因为只获取id，所以不用考虑更新缓存信息问题
+     * 对某表某字段某值对应的 id 进行缓存，指定时间过期
+     * 即使修改此字段此行内容，下次获取时因为 查询字段的值 变化了，不会命中旧的缓存，而是会新生成一条缓存。
+     * 如果删除了此行数据，查询时依旧会命中缓存，所以还是需要删除缓存操作。
+     * TODO::但是因为查询的就是id，而缓存标签也要使用id，无法完成。
+     * TODO::因为 base_use_fields_get_data() 方法需要频繁使用此方法，如果取消缓存则会消耗 mysql 性能。所以无法取消缓存
      *
      * @param array $where 查询条件，二维数组，每个子数组中有三个元素，例如: ['id', '=', 1], ['status', 'in', [1, 2]]
      * @return int
      */
-    public function use_field_get_id($where = []):int{
-        switch($this->cache_onoff){
+    public function base_use_fields_get_id(array $where = [], bool $cache_onoff = $this->cache_onoff):int{
+        switch($cache_onoff){
             case true:
                 $key = md5(json_encode($where));
                 $res_id = Cache::remember("ufgi:{$this->eloquentClass}:{$key}", $this->cache_expiration_time, function() use($where){
-                    return $this->many_where_select($where)->value('id') ?? 0;
+                    return $this->base_many_where_select($where)->value('id') ?? 0;
                 });
                 break;
             case false:
-                $res_id = $this->many_where_select($where)->value('id') ?? 0;
+                $res_id = $this->base_many_where_select($where)->value('id') ?? 0;
                 break;
         }
         return $res_id;
@@ -58,16 +65,17 @@ class BaseRepository{
     /**
      * 通过查询条件获取单条数据
      *
-     * 获取并缓存指定查询条件的全部信息，然后根据需要返回指定字段。
+     * 获取并缓存指定查询条件的指定查询字段。
+     * 要考虑更新的问题，需要给缓存设置标签 (一行数据因为查询字段和查询条件的不同会生成多条缓存)，所以需要优先获取数据的id
      * 因为标识是id，如果某行字段的内容修改了，查询数据依旧会命中缓存而不查询新数据。所以需要考虑更新问题
-     * 如果使用 update_data 方法修改数据，无需在此考虑数据更新问题
+     * 如果使用 base_update_data 方法修改数据，无需在此考虑数据更新问题
      * 如果在后台管理或修改数据库数据，则要考虑数据更新问题
      *
      * @param array $where 查询条件，二维数组，每个子数组中有三个元素，例如: ['id', '=', 1], ['status', 'in', [1, 2]]
      * @param array $select
      * @return json
      */
-    public function use_field_get_data($where = [], $select = ['*']){
+    public function base_use_fields_get_data($where = [], $select = ['*']){
         switch($this->cache_onoff){
             case true:  // 有缓存
                 // 根据查询条件获取id，如果查询条件中有id，则直接使用
@@ -78,18 +86,18 @@ class BaseRepository{
                         break;
                     }
                 }
-                $id = $id == 0 ? $this->use_field_get_id($where) : $id;
+                $id = $id == 0 ? $this->base_use_fields_get_id($where) : $id;
                 if($id == 0){
                     return null;
                 }
                 // 根据 where 和 select 条件进行缓存，筛选条件作为缓存主表示，数据id作为标签(删除用)
                 $key = md5(json_encode($where) . json_encode($select));
                 $data = Cache::tags(["{$this->eloquentClass}:{$id}"])->remember("ufgd:{$this->eloquentClass}:{$key}", $this->cache_expiration_time, function() use($where, $select){
-                    return $this->many_where_select($where, $select)->first();
+                    return $this->base_many_where_select($where, $select)->first();
                 });
                 break;
             case false:  // 无缓存
-                $data = $this->many_where_select($where, $select)->first();
+                $data = $this->base_many_where_select($where, $select)->first();
                 break;
         }
         return $data;
@@ -99,6 +107,8 @@ class BaseRepository{
      * 根据多个查询条件获取数据列表
      * 包含查询条件、字段筛选、排序、分页。
      * 可使用page=1，limit=1的方式获取一条数据，但此时的一条数据同样是一个二维数组，此二维数组仅包含一条数据。
+     * TODO::当前仅缓存了查询的最后一条数据id，方便下一页的查询。（有无更好的缓存方案）
+     * TODO::当前方案无数据不一致问题，因此不受缓存开关设置影响
      *
      * @param array $where 查询条件，二维数组，每个子数组中有三个元素，例如: ['id', '=', 1], ['status', 'in', [1, 2]]
      * @param array $select 字段筛选，默认是查询全部字段
@@ -107,8 +117,8 @@ class BaseRepository{
      * @param integer $limit 每页查询的条数
      * @return array[Collection, ...]
      */
-    public function use_fields_get_list($where = [], $page = 1, $limit = 10, $order = ['id', 'desc'], $select = ['*']){
-        $obj = $this->many_where_select($where, $select);
+    public function base_use_fields_get_list($where = [], $page = 1, $limit = 10, $order = ['id', 'desc'], $select = ['*']){
+        $obj = $this->base_many_where_select($where, $select);
         // 排序
         $obj = $obj->orderby($order[0], $order[1]);
         // 保存本页最后一条数据的id，在查询下一页时，可直接使用保存的id作为where条件，筛除已查询过的数据
@@ -129,34 +139,20 @@ class BaseRepository{
     }
 
     /**
-     * 根据某标识获取指定数据行，并修改数据
-     * 因为修改了行数据，所以缓存与数据库不一致了，需要删除缓存
-     *
-     * @param array $where 查询条件，二维数组，每个子数组中有三个元素，例如: ['id', '=', 1], ['status', 'in', [1, 2]]
-     * @param array $update_data 要修改的数据，[字段=> 值, ...]
-     * @return bool
-     */
-    public function update_data($where, $update_data = []){
-        $id = $this->use_field_get_id($where);
-        $res = $this->eloquentClass::where('id', $id)->update($update_data);
-        $this->delete_select_cache($id);  # 此值必定是id
-        return $res;
-    }
-
-    /**
      * 根据指定一项或多项筛选条件，将符合条件的数据修改内容
+     * （正常情况下，如果你只想修改一条数据，就需要使用唯一表示字段作为查询条件，因此无需再设置修改一条数据的方法）
      * 将符合筛选条件的缓存删除
      *
      * @param array $where 查询条件，二维数组，每个子数组中有三个元素，例如: ['id', '=', 1], ['status', 'in', [1, 2]]
      * @param array $update_data 要修改的数据，[字段=> 值, ...]
      * @return void
      */
-    public function update_datas($where = [], $update_data = []){
-        $obj = $this->many_where_select($where, ['id']);
+    public function base_update_datas($where = [], $update_data = []){
+        $obj = $this->base_many_where_select($where, ['id']);
         $ids = $obj->pluck('id');
         $res = $this->eloquentClass::whereIn('id', $ids)->update($update_data);
         foreach($ids as $id){
-            $this->delete_select_cache($id);
+            $this->base_delete_select_cache($id);
         }
         return $res;
     }
@@ -172,10 +168,10 @@ class BaseRepository{
      * @param array $update_data 要修改的数据，[字段=> 值, ...]
      * @return bool
      */
-    public function increment_data($where, $increment_field, $increment_value = 1, $update_data = []){
-        $id = $this->use_field_get_id($where);
+    public function base_increment_data($where, $increment_field, $increment_value = 1, $update_data = []){
+        $id = $this->base_use_fields_get_id($where, false);
         $res = $this->eloquentClass::where('id', $id)->increment($increment_field, $increment_value, $update_data);
-        $this->delete_select_cache($id);
+        $this->base_delete_select_cache($id);
         return $res;
     }
 
@@ -187,12 +183,12 @@ class BaseRepository{
      * @param string $select_value
      * @return void
      */
-    public function delete_datas($where){
-        $obj = $this->many_where_select($where, ['id']);
+    public function base_delete_datas($where){
+        $obj = $this->base_many_where_select($where, ['id']);
         $ids = $obj->pluck('id');
         $res = $this->eloquentClass::whereIn('id', $ids)->delete();
         foreach($ids as $id){
-            $this->delete_select_cache($id);
+            $this->base_delete_select_cache($id);
         }
         return $res;
     }
@@ -203,7 +199,7 @@ class BaseRepository{
      * @param int $id
      * @return void
      */
-    public function delete_select_cache($id){
+    public function base_delete_select_cache($id){
         Cache::tags(["{$this->eloquentClass}:{$id}"])->flush();
     }
 
@@ -214,7 +210,7 @@ class BaseRepository{
      * @param array $select
      * @return void
      */
-    protected function many_where_select($where = [], $select = ['*']){
+    protected function base_many_where_select($where = [], $select = ['*']){
         // 如果需要筛选字段，则 id 必须存在
         if(count($select) <= 0 || ($select[0] != '*' && !in_array('id', $select))){
             $select[] = 'id';

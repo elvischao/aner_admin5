@@ -214,6 +214,8 @@ class UserController extends BaseController
 
     public function get_users(Request $request){
         $nickname = $request->get('q');
-        return (new User())->model()->get(['id', DB::raw('nickname as text')]);
+        $sys_user = config('admin.users');
+        $identity = $sys_user['user_identity'][0];
+        return (new User())->model()->get(['id', DB::raw("{$identity} as text")]);
     }
 }

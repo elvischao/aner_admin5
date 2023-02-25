@@ -34,18 +34,18 @@ class SysSettingController extends BaseController{
                 }elseif($this->input_type == 'onoff'){
                     return $column->switch();
                 }elseif($this->input_type == 'redio'){
-                    return $column->radio(explode(' ', $this->remark));
+                    return $column->radio(explode(',', $this->remark));
                 }elseif($this->input_type == 'select'){
-                    return $column->select(explode(' ', $this->remark));
+                    return $column->select(explode(',', $this->remark));
                 }
             });
-            if(config('admin.setting.line_button_show') == false){
-                $grid->disableViewButton();
+            if(config('admin.developer_mode') == false){
                 $grid->disableEditButton();
                 $grid->disableDeleteButton();
                 $grid->disableQuickEditButton();
                 $grid->disableToolbar();
             }
+            $grid->disableViewButton();
             $grid->disableRowSelector();
             $grid->withBorder();
             $grid->disableRefreshButton();
@@ -86,15 +86,18 @@ class SysSettingController extends BaseController{
     protected function form()
     {
         return Form::make(new SysSetting(), function (Form $form) {
+            $form->tools(function (Form\Tools $tools) {
+                $tools->disableView();
+                $tools->disableDelete();
+            });
             $form->hidden('value');
             $form->input('remark', $form->model()->remark);
 
             $form->display('id');
             $form->select('parent_id')->options((new SysSetting())->get_parent_list());
             $form->text('title');
-            $form->hidden('remark');
             $form->select('input_type')->options(['text'=> '普通字符', 'select'=> '下拉选项', 'redio'=> '单选项', 'onoff'=> '开关'])->when(['select', 'redio'], function(Form $form){
-                $form->text('remark')->help('仅在select、redio类型的表单中有效，每个选项以空格隔开');
+                $form->tags('remark')->help('仅在select、redio类型的表单中有效，每个选项以逗号隔开');
             });
             $form->footer(function ($footer) {
                 $footer->disableViewCheck();
@@ -103,9 +106,7 @@ class SysSettingController extends BaseController{
                 $form->value = $form->value ?? '';
                 if($form->isCreating()){
                     $form->parent_id = $form->parent_id ?? 0;
-                }
-                if($form->remark == null){
-                    $form->remark = '';
+                    $form->remark = implode(',', array_filter($form->remark));
                 }
             });
             $form->saved(function(Form $form, $result){

@@ -11,26 +11,36 @@ use App\Models\Sys\SysAd as SysAdModel;
 use Illuminate\Support\Facades\Redis;
 use Dcat\Admin\Widgets\Card;
 
-class SysAdController extends BaseController
-{
+class SysAdController extends BaseController{
     /**
      * Make a grid builder.
      *
      * @return Grid
      */
-    protected function grid()
-    {
+    protected function grid(){
         return Grid::make(new SysAd(), function (Grid $grid) {
             $grid->column('id')->sortable();
-            $grid->title->tree(true, false)->width('30%')->setAttributes(['style'=> 'word-break:break-all;']);
-            $grid->column('image')->image('', 60, 60)->width('10%');
-            $grid->column('value')->width('30%')->setAttributes(['style'=> 'word-break:break-all;']);
-            $grid->column('content')->width('10%')->display('')->modal(function ($modal) {
+            $grid->title->tree(true, false)->width('25%')->setAttributes(['style'=> 'word-break:break-all;']);
+            $grid->column('value')->width('25%')->setAttributes(['style'=> 'word-break:break-all;']);
+            $grid->column('image')->image('', 60, 60)->width('15%');
+            $grid->column('content')->width('15%')->display('')->modal(function ($modal) {
                 $modal->title($this->title);
                 $this->content == null ? $modal->icon('feather ') : $modal->icon('feather icon-eye');
                 $card = new Card(null, $this->content);
                 return "<div style='padding:10px 10px 0'>$card</div>";
             });
+
+            $grid->disableFilterButton();
+            $grid->disableViewButton();
+            $grid->actions(function (Grid\Displayers\Actions $actions) {
+                if($this->delete_allowed == 0){
+                    $actions->disableDelete();
+                }
+                if($this->update_allowed == 0){
+                    $actions->disableEdit();
+                }
+            });
+
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('id');
 
@@ -40,53 +50,42 @@ class SysAdController extends BaseController
     }
 
     /**
-     * Make a show builder.
-     *
-     * @param mixed $id
-     *
-     * @return Show
-     */
-    protected function detail($id)
-    {
-        return Show::make($id, new SysAd(), function (Show $show) {
-            $show->field('id');
-            $show->field('title');
-            $show->field('parent_id')->as(function(){
-                $sys_ad = (new SysAd())->get_parent($this->parent_id);
-                return $sys_ad ? $sys_ad->title : '';
-            });
-            $show->field('image')->image();
-            $show->field('value');
-            $show->field('content')->unescape();
-            $show->field('created_at');
-            $show->field('updated_at');
-        });
-    }
-
-    /**
      * Make a form builder.
      *
      * @return Form
      */
-    protected function form()
-    {
+    protected function form(){
         return Form::make(new SysAd(), function (Form $form) {
+            $form->tools(function (Form\Tools $tools) {
+                $tools->disableView();
+                $tools->disableDelete();
+            });
             $form->display('id');
             $form->text('title')->required();
             $form->select('parent_id')
                 ->when('!=', '', function(Form $form){
-                    $form->html('<span class="help-block"><i class="fa feather icon-help-circle"></i>&nbsp;请至少填写/上传以下三项中的一项</span>');
-                    $form->text('value');
-                    $form->image('image')->autoUpload()->uniqueName()->saveFullUrl();
-                    $form->editor('content')->height('600')->disk(config('admin.upload_disk'));
+                    $form->select("type", '内容类型')->options(['文字'=> '文字', '图片'=> '图片', '富文本'=> '富文本'])->when('文字', function(Form $form){
+                        $form->text('value');
+                    })->when('图片', function(Form $form){
+                        $form->image('image')->autoUpload()->uniqueName()->saveFullUrl();
+                    })->when("富文本", function(Form $form){
+                        $form->editor('content')->height('600')->disk(config('admin.upload_disk'));
+                    });
                 })
                 ->options((new SysAd())->get_parent_list())
                 ->help('如果添加的是广告位，则不要选择广告位');
+            if(config('admin.developer_mode')){
+                $form->switch("delete_allowed", '是否允许删除')->value(1);
+                $form->switch("update_allowed", '是否允许修改')->value(1);
+            }
             $form->footer(function ($footer) {
                 $footer->disableViewCheck();
             });
             $form->saving(function (Form $form) {
                 $form->parent_id = $form->parent_id ?? 0;
+                $form->value = $form->value ?? '';
+                $form->image = $form->image ?? '';
+                $form->content = $form->content ?? '';
                 if($form->parent_id != 0){
                     $value = $form->value;
                     $image = $form->image;
@@ -96,12 +95,15 @@ class SysAdController extends BaseController
                     }
                 }
             });
-            $form->editing(function(Form $form, $result){
-                (new SysAd())->del_cache_data($form->id);
-            });
-            $form->deleted(function (Form $form, $result) {
-                (new SysAd())->del_cache_data($form->id);
-            });
+            // $form->editing(function(Form $form, $result){
+            //     (new SysAd())->del_cache_data($form->id);
+            // });
+            // $form->deleted(function (Form $form, $result) {
+            //     (new SysAd())->del_cache_data($form->id);
+            // });
+            $form->disableViewCheck();
+            $form->disableEditingCheck();
+            $form->disableCreatingCheck();
         });
     }
 }

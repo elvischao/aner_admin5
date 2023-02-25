@@ -20,12 +20,23 @@ class ArticleCategoryController extends BaseController
         return Grid::make(new ArticleCategory(), function (Grid $grid) {
             $grid->column('id')->sortable();
             $grid->column('name');
-            config('admin.article.category_image_show') ? $grid->column('image')->image('', 40, 40) : '';
+            if(config('admin.article.category_image_show')){
+                $grid->column('image')->image('', 40, 40);
+            }
 
             $grid->disableViewButton();
+            $grid->actions(function (Grid\Displayers\Actions $actions) {
+                if($this->delete_allowed == 0){
+                    $actions->disableDelete();
+                }
+                if($this->update_allowed == 0){
+                    $actions->disableEdit();
+                }
+            });
 
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('id');
+                $filter->equal('name');
             });
         });
     }
@@ -43,7 +54,13 @@ class ArticleCategoryController extends BaseController
 
             $form->display('id');
             $form->text('name')->required();
-            config('admin.article.category_image_show') ? $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required() : '';
+            if(config('admin.article.category_image_show')){
+                $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required();
+            }
+            if(config('admin.developer_mode')){
+                $form->switch("delete_allowed", '是否允许删除')->value(1);
+                $form->switch("update_allowed", '是否允许修改')->value(1);
+            }
 
             $form->footer(function ($footer) {
                 $footer->disableViewCheck();

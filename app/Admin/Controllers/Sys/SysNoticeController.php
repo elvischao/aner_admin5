@@ -6,6 +6,7 @@ use App\Admin\Repositories\Sys\SysNotice;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
+use Dcat\Admin\Widgets\Card;
 use App\Admin\Controllers\BaseController;
 use App\Models\Sys\SysNotice as SysNoticeModel;
 
@@ -16,16 +17,27 @@ class SysNoticeController extends BaseController
      *
      * @return Grid
      */
-    protected function grid()
-    {
+    protected function grid(){
+        if(config('admin.notice.notice_show') == false){
+            return admin_error('error', '当前已关闭公告功能，请删除此目录或联系管理员打开公告功能');
+        }
         return Grid::make(new SysNotice(), function (Grid $grid) {
             $grid->model()->orderBy('id', 'desc');
             switch(config('admin.notice.type')) {
                 case '单条富文本':
                     SysNoticeModel::init();
+                    $grid->column('');
                     $grid->column('title');
+                    $grid->column('content')->width('15%')->display('')->modal(function ($modal) {
+                        $modal->title($this->title);
+                        $this->content == null ? $modal->icon('feather ') : $modal->icon('feather icon-eye');
+                        $card = new Card(null, $this->content);
+                        return "<div style='padding:10px 10px 0'>$card</div>";
+                    });
                     $grid->disableDeleteButton();
+                    $grid->disableViewButton();
                     $grid->disableCreateButton();
+                    $grid->disableFilter();
                     break;
                 case '多条富文本':
                     $grid->column('id')->sortable();
@@ -33,18 +45,23 @@ class SysNoticeController extends BaseController
                     break;
                 default:
                     SysNoticeModel::init();
-                    $grid->column('id')->sortable();
+                    $grid->column('');
                     $grid->column('title');
                     $grid->disableViewButton();
                     $grid->disableDeleteButton();
                     $grid->disableCreateButton();
+                    $grid->disableFilter();
                     break;
             }
-            config('admin.notice.image_show') ? $grid->column('image')->image('', 40, 40) : '';
+            if(config('admin.notice.image_show')){
+                $grid->column('image')->image('', 40, 40);
+            }
             $grid->column('created_at');
             $grid->disableRowSelector();
+
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('id');
+                $filter->like('title');
             });
         });
     }
