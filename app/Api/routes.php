@@ -18,6 +18,10 @@ Route::post('sys/notice', [\App\Api\Controllers\SysController::class, 'notice'])
 Route::post('sys/notice/list', [\App\Api\Controllers\SysController::class, 'notice_list']);
 Route::post('sys/ad', [\App\Api\Controllers\SysController::class, 'ad']);
 
+Route::post('sys/article/category', [\App\Api\Controllers\SysController::class, 'article_category_list']);
+Route::post('sys/article/list', [\App\Api\Controllers\SysController::class, 'article_list']);
+Route::post('sys/article/detail', [\App\Api\Controllers\SysController::class, 'article_detail']);
+
 Route::group([
     'middleware' => ['user.token'],
 ], function(Router $router){

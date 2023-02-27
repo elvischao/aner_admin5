@@ -54,6 +54,15 @@ class ArticleTagController extends BaseController
                 $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required();
             }
 
+            // 清除缓存
+            $form->saved(function(Form $form, $result){
+                (new ArticleTag())->del_cache_data($form->model()->id);
+            });
+            $form->deleted(function(Form $form, $result){
+                $data_id = $form->model()->toArray()[0]['id'];
+                (new ArticleTag())->del_cache_data($data_id);
+            });
+
             $form->footer(function ($footer) {
                 $footer->disableViewCheck();
             });

@@ -4,7 +4,8 @@ namespace App\Admin\Repositories\Sys;
 
 use App\Models\Sys\SysAd as Model;
 use Dcat\Admin\Repositories\EloquentRepository;
-use Illuminate\Support\Facades\Redis;
+
+use App\Api\Repositories\Sys\SysAdRepository;
 
 class SysAd extends EloquentRepository
 {
@@ -35,12 +36,13 @@ class SysAd extends EloquentRepository
     }
 
     /**
-     * 删除 api 接口中设置的缓存
+     * 删除api接口中的缓存
      *
      * @param integer $id
      * @return void
      */
     public function del_cache_data(int $id){
-        return Redis::del("ad:" . $id);
+        $SysAdRepository = new SysAdRepository();
+        $SysAdRepository->del_get_data_cache($id);
     }
 }

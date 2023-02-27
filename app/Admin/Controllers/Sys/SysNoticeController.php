@@ -10,8 +10,7 @@ use Dcat\Admin\Widgets\Card;
 use App\Admin\Controllers\BaseController;
 use App\Models\Sys\SysNotice as SysNoticeModel;
 
-class SysNoticeController extends BaseController
-{
+class SysNoticeController extends BaseController{
     /**
      * Make a grid builder.
      *
@@ -73,8 +72,7 @@ class SysNoticeController extends BaseController
      *
      * @return Show
      */
-    protected function detail($id)
-    {
+    protected function detail($id){
         return Show::make($id, new SysNotice(), function (Show $show) {
             $show->field('id');
             $show->field('title');
@@ -93,8 +91,7 @@ class SysNoticeController extends BaseController
      *
      * @return Form
      */
-    protected function form()
-    {
+    protected function form(){
         return Form::make(new SysNotice(), function (Form $form) {
             $form->hidden('id');
             config('admin.notice.image_show') ? $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required() : '';
@@ -113,12 +110,17 @@ class SysNoticeController extends BaseController
             $form->saving(function (Form $form) {
                 $form->content = $form->content ?? '';
             });
+
+            // 清除缓存
             $form->saved(function(Form $form, $result){
-                (new SysNotice())->del_cache_data($form->id);
+                (new SysNotice())->del_cache_data($form->model()->id);
             });
-            $form->deleted(function (Form $form, $result) {
-                (new SysNotice())->del_cache_data($form->id);
+            $form->deleted(function(Form $form, $result){
+                $data_id = $form->model()->toArray()[0]['id'];
+                (new SysNotice())->del_cache_data($data_id);
             });
+
+
             $form->disableViewCheck();
             $form->disableEditingCheck();
             $form->disableCreatingCheck();

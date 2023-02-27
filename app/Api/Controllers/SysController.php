@@ -22,7 +22,7 @@ class SysController extends BaseController{
     }
 
     /**
-     * 公告
+     * 获取公告详情
      *
      * @param Request $request
      * @return void
@@ -57,7 +57,18 @@ class SysController extends BaseController{
     }
 
     /**
-     * 获取文章列表
+     * 获取文章分类列表
+     *
+     * @param Request $request
+     * @return void
+     */
+    public function article_category_list(Request $request){
+        $data = $this->service->get_article_category_list();
+        return success("文章分类列表", $data);
+    }
+
+    /**
+     * 获取文章列表, 可根据文章分类筛选
      *
      * @param \App\Api\Requests\PageRequest $request
      * @return void

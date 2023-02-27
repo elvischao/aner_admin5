@@ -47,7 +47,8 @@ class BaseRepository{
      * @param array $where 查询条件，二维数组，每个子数组中有三个元素，例如: ['id', '=', 1], ['status', 'in', [1, 2]]
      * @return int
      */
-    public function base_use_fields_get_id(array $where = [], bool $cache_onoff = $this->cache_onoff):int{
+    public function base_use_fields_get_id(array $where = [], bool $cache_onoff = null):int{
+        $cache_onoff = $cache_onoff ?? $this->cache_onoff;
         switch($cache_onoff){
             case true:
                 $key = md5(json_encode($where));

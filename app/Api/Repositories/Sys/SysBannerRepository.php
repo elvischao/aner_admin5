@@ -3,6 +3,7 @@ namespace App\Api\Repositories\Sys;
 
 use App\Api\Repositories\BaseRepository;
 use App\Models\Sys\SysBanner as Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
 
 class SysBannerRepository extends BaseRepository{
@@ -14,27 +15,17 @@ class SysBannerRepository extends BaseRepository{
      * @return void
      */
     public function get_all(){
-        $values = Redis::hvals("banner");
-        if(!$values){
-            self::set_all();
-            $values = Redis::hvals("banner");
-        }
-        foreach($values as $key=> $value){
-            $values[$key] = json_decode($value);
-        }
-        return $values;
+        return Cache::tags('banner')->remember("banner", $this->cache_expiration_time, function(){
+            return $this->eloquentClass::select(['id', 'image', 'url', 'created_at'])->get();
+        });
     }
 
     /**
-     * 将全部数据添加到redis
-     * 后台修改banner图后，会将缓存删除
+     * 删除 get_all() 方法设置的缓存
      *
      * @return void
      */
-    private function set_all(){
-        foreach($this->eloquentClass::all() as $item){
-            Redis::hmset('banner', ["{$item->id}"=> json_encode(['image'=> $item->image, 'url'=> $item->url])]);
-        }
-        return true;
+    public function del_get_all_cache(){
+        Cache::tags("banner")->flush();
     }
 }

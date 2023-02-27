@@ -5,6 +5,7 @@ use App\Api\Repositories\Sys\SysBannerRepository;
 use App\Api\Repositories\Sys\SysNoticeRepository;
 use App\Api\Repositories\Sys\SysAdRepository;
 use App\Api\Repositories\Article\ArticleRepository;
+use App\Api\Repositories\Article\ArticleCategoryRepository;
 
 
 class SysService{
@@ -14,13 +15,7 @@ class SysService{
      * @return void
      */
     public function get_banners(){
-        $banners = (new SysBannerRepository())->get_all();
-        if(config('admin.banner.url_show') == false){ // 是否展示url
-            foreach($banners as $key => $value){
-                $banners[$key] = $value->image;
-            }
-        }
-        return $banners;
+        return (new SysBannerRepository())->get_all();
     }
 
     /**
@@ -35,21 +30,21 @@ class SysService{
         $sys_image_show = config('admin.notice.image_show');
         switch(config('admin.notice.type')){
             case '单条文字':
-                $data = $SysNoticeRepository->use_field_get_data([], ['id', 'title']);
+                $data = $SysNoticeRepository->base_use_fields_get_data([], ['id', 'title']);
                 $data->content = $data->title;
                 unset($data->title);
                 break;
             case "单条富文本":
-                $data = $SysNoticeRepository->use_field_get_data([], ['id', 'title', 'content', 'image']);
+                $data = $SysNoticeRepository->base_use_fields_get_data([], ['id', 'title', 'content', 'image']);
                 if($sys_image_show){
                     unset($data->image);
                 }
                 break;
             case "多条富文本":
                 if($id == 0){
-                    throwBusinessException('当前公告模式设置为多条，请使用 get_notice_list 接口');
+                    throwBusinessException('当前公告模式设置为多条，请使用 get_notice_list 接口或传递 id 参数!');
                 }
-                $data = $SysNoticeRepository->use_field_get_data([['id', '=', $id]], ['id', 'title', 'content', 'image']);
+                $data = $SysNoticeRepository->base_use_fields_get_data([['id', '=', $id]], ['id', 'title', 'content', 'image']);
                 if($sys_image_show){
                     unset($data->image);
                 }
@@ -69,16 +64,15 @@ class SysService{
      */
     public function get_notice_list(int $page = 1, int $limit = 10):\Illuminate\Database\Eloquent\Collection{
         $SysNoticeRepository = new SysNoticeRepository();
-        $sys_image_show = config('admin.notice.image_show');
         if(config('admin.notice.type') != '多条富文本'){
-            throwBusinessException('当前公告模式设置为单条，请使用 get_notice 接口');
+            throwBusinessException('当前公告模式设置为单条，请直接使用 get_notice 接口');
         }
-        $data = $SysNoticeRepository->use_fields_get_list([], $page, $limit, ['id', 'desc'], ['id', 'title', 'content', 'image']);
+        $data = $SysNoticeRepository->base_use_fields_get_list([], $page, $limit, ['id', 'desc'], ['id', 'title', 'content', 'image']);
+        $sys_image_show = config('admin.notice.image_show');
         foreach($data as $key=> $value){
             if($sys_image_show == false){
                 unset($data[$key]->image);
             }
-            unset($data[$key]->content);
         }
         return $data;
     }
@@ -90,12 +84,19 @@ class SysService{
      * @return void
      */
     public function get_ad(int $id){
-        $data = (new SysAdRepository())->getone($id);
-        if(empty($data['title'])){  // 是广告位，需要解析数据
-            foreach($data as $key=> $value){
-                $data[$key] = json_decode($value);
-            }
-        }
+        $SysAdRepository = new SysAdRepository();
+        $data = $SysAdRepository->get_data($id);
+        return $data;
+    }
+
+    /**
+     * 获取文章分类列表
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function get_article_category_list():\Illuminate\Database\Eloquent\Collection{
+        $ArticleCategoryRepository = new ArticleCategoryRepository();
+        $data = $ArticleCategoryRepository->base_use_fields_get_list([], 1, 1000, ['id', 'desc'], ['id', 'name', 'image']);
         return $data;
     }
 
@@ -110,10 +111,10 @@ class SysService{
     public function get_article_list(int $category_id, int $page = 1, int $limit = 10):\Illuminate\Database\Eloquent\Collection{
         $where = [];
         if($category_id != 0){
-            $where[] = ['category_id'=> $category_id];
+            $where[] = ['category_id', '=', $category_id];
         }
         $ArticleRepository = new ArticleRepository();
-        $data = $ArticleRepository->use_fields_get_list($where, $page, $limit, ['id', 'desc'], ['id', 'tag_ids', 'category_id', 'title', 'author', 'intro', 'keyword', 'image', 'content', 'created_at']);
+        $data = $ArticleRepository->base_use_fields_get_list($where, $page, $limit, ['id', 'desc'], ['id', 'tag_ids', 'category_id', 'title', 'author', 'intro', 'keyword', 'image', 'content', 'created_at']);
         foreach($data as &$v){
             $v = $ArticleRepository->disposal_data($v);
         }
@@ -128,10 +129,11 @@ class SysService{
      */
     public function get_article_detail(int $id):\Illuminate\Database\Eloquent\Model{
         $ArticleRepository = new ArticleRepository();
-        $data = $ArticleRepository->use_field_get_data([['id', '=', $id]], ['id', 'tag_ids', 'category_id', 'title', 'author', 'intro', 'keyword', 'image', 'content', 'created_at']);
-        foreach($data as &$v){
-            $v = $ArticleRepository->disposal_data($v);
+        $data = $ArticleRepository->base_use_fields_get_data([['id', '=', $id]], ['id', 'tag_ids', 'category_id', 'title', 'author', 'intro', 'keyword', 'image', 'content', 'created_at']);
+        if(!$data){
+            throwBusinessException('文章不存在');
         }
+        $data = $ArticleRepository->disposal_data($data);
         return $data;
     }
 }

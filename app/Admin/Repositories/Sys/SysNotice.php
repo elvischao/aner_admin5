@@ -23,6 +23,6 @@ class SysNotice extends EloquentRepository
      */
     public function del_cache_data(int $id){
         $SysNoticeRepository = new SysNoticeRepository();
-        $SysNoticeRepository->delete_select_cache($id);
+        $SysNoticeRepository->base_delete_select_cache($id);
     }
 }

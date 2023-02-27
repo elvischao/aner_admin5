@@ -95,12 +95,16 @@ class SysAdController extends BaseController{
                     }
                 }
             });
-            // $form->editing(function(Form $form, $result){
-            //     (new SysAd())->del_cache_data($form->id);
-            // });
-            // $form->deleted(function (Form $form, $result) {
-            //     (new SysAd())->del_cache_data($form->id);
-            // });
+
+            // 清除缓存
+            $form->saved(function(Form $form, $result){
+                (new SysAd())->del_cache_data($form->model()->id);
+            });
+            $form->deleted(function(Form $form, $result){
+                $data_id = $form->model()->toArray()[0]['id'];
+                (new SysAd())->del_cache_data($data_id);
+            });
+
             $form->disableViewCheck();
             $form->disableEditingCheck();
             $form->disableCreatingCheck();

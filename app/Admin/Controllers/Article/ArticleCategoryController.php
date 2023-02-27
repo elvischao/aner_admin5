@@ -9,8 +9,7 @@ use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 
 
-class ArticleCategoryController extends BaseController
-{
+class ArticleCategoryController extends BaseController{
     /**
      * Make a grid builder.
      *
@@ -61,6 +60,15 @@ class ArticleCategoryController extends BaseController
                 $form->switch("delete_allowed", '是否允许删除')->value(1);
                 $form->switch("update_allowed", '是否允许修改')->value(1);
             }
+
+            // 清除缓存
+            $form->saved(function(Form $form, $result){
+                (new ArticleCategory())->del_cache_data($form->model()->id);
+            });
+            $form->deleted(function(Form $form, $result){
+                $data_id = $form->model()->toArray()[0]['id'];
+                (new ArticleCategory())->del_cache_data($data_id);
+            });
 
             $form->footer(function ($footer) {
                 $footer->disableViewCheck();

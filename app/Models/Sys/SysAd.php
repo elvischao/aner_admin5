@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
-class SysAd extends Model
-{
+class SysAd extends Model{
 	use HasDateTimeFormatter;
     use SoftDeletes;
     use ModelTree;
@@ -24,5 +23,23 @@ class SysAd extends Model
 
     public function getOrderColumn(){
         return null;
+    }
+
+    /**
+     * 获取上级广告位
+     *
+     * @return void
+     */
+    public function parent(){
+        return $this->hasOne(SysAd::class, 'id', 'parent_id');
+    }
+
+    /**
+     * 获取下级广告
+     *
+     * @return void
+     */
+    public function children(){
+        return $this->hasMany(SysAd::class, 'parent_id', 'id');
     }
 }

@@ -12,8 +12,7 @@ use App\Models\Article\ArticleTag;
 
 use Dcat\Admin\Widgets\Card;
 
-class ArticleController extends BaseController
-{
+class ArticleController extends BaseController{
     /**
      * Make a grid builder.
      *
@@ -91,8 +90,7 @@ class ArticleController extends BaseController
      *
      * @return Show
      */
-    protected function detail($id)
-    {
+    protected function detail($id){
         return Show::make($id, new Article(), function (Show $show) {
             $show->field('id');
             $show->field('title');
@@ -122,8 +120,7 @@ class ArticleController extends BaseController
      *
      * @return Form
      */
-    protected function form()
-    {
+    protected function form(){
         return Form::make(new Article(), function (Form $form) {
             $form->tools(function (Form\Tools $tools) {
                 $tools->disableView();
@@ -158,6 +155,15 @@ class ArticleController extends BaseController
                 if(config('admin.article.keyword_show')){
                     $form->keyword = implode(',', $form->keyword);
                 }
+            });
+
+            // 清除缓存
+            $form->saved(function(Form $form, $result){
+                (new Article())->del_cache_data($form->model()->id);
+            });
+            $form->deleted(function(Form $form, $result){
+                $data_id = $form->model()->toArray()[0]['id'];
+                (new Article())->del_cache_data($data_id);
             });
 
             $form->footer(function ($footer) {

@@ -6,8 +6,9 @@ use App\Models\Sys\SysBanner as Model;
 use Dcat\Admin\Repositories\EloquentRepository;
 use Illuminate\Support\Facades\Redis;
 
-class SysBanner extends EloquentRepository
-{
+use App\Api\Repositories\Sys\SysBannerRepository;
+
+class SysBanner extends EloquentRepository{
     /**
      * Model.
      *
@@ -21,6 +22,7 @@ class SysBanner extends EloquentRepository
      * @return void
      */
     public function del_cache_data(){
-        Redis::del("banner");
+        $SysBannerRepository = new SysBannerRepository();
+        $SysBannerRepository->del_get_all_cache();
     }
 }

@@ -99,14 +99,7 @@ function create_captcha(int $number, string $type = 'figure'):string{
  * @return Array
  */
 function comma_str_to_array(string $str):Array {
-    $array = explode(',', $str);
-    $res = [];
-    foreach($array as $value){  // 空字符串时, 上一步得到的结果为 ['']
-        if($value != ''){
-            $res[] = $value;
-        }
-    }
-    return $res;
+    return array_filter(explode(',', $str));
 }
 
 /**

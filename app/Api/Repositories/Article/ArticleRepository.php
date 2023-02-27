@@ -19,9 +19,9 @@ class ArticleRepository extends BaseRepository{
     public function disposal_data(\Illuminate\Database\Eloquent\Model $data):\Illuminate\Database\Eloquent\Model{
         $ArticleCategoryRepository = new ArticleCategoryRepository();
         $ArticleTagRepository = new ArticleTagRepository();
-        $data->category = $ArticleCategoryRepository->use_field_get_data([['id', '=', $data->category_id]], ['id', 'name', 'image']);
+        $data->category = $ArticleCategoryRepository->base_use_fields_get_data([['id', '=', $data->category_id]], ['id', 'name', 'image']);
         unset($data->category_id);
-        $tags = $ArticleTagRepository->use_fields_get_list([['id', 'in', comma_str_to_array($data->tag_ids)]], 1, 100, ['id', 'desc'], ['id', 'name']);
+        $tags = $ArticleTagRepository->base_use_fields_get_list([['id', 'in', json_decode($data->tag_ids)]], 1, 100, ['id', 'desc'], ['id', 'name']);
         $data->tags = get_collection_field($tags, 'name');
         unset($data->tag_ids);
         return $data;

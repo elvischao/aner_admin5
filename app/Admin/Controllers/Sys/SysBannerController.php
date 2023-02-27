@@ -50,6 +50,15 @@ class SysBannerController extends BaseController{
             if(config('admin.banner.url_show')){
                 $form->text('url')->required();
             }
+
+            // 清除缓存
+            $form->saved(function(Form $form, $result){
+                (new SysBanner())->del_cache_data();
+            });
+            $form->deleted(function(Form $form, $result){
+                (new SysBanner())->del_cache_data();
+            });
+
             $form->disableViewCheck();
             $form->disableEditingCheck();
             $form->disableCreatingCheck();
