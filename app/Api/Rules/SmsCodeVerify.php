@@ -21,13 +21,16 @@ class SmsCodeVerify implements Rule, DataAwareRule{
         }
         if(empty($this->data['phone'])){
             $UsersRepository = new UsersRepository();
-            $user = $UsersRepository->use_field_get_data([['id', '=', $this->data['uid']]], ['phone']);
+            $user = $UsersRepository->base_use_fields_get_data([['id', '=', $this->data['uid']]], ['phone']);
             if(!$user){
                 return false;
             }
             $this->data['phone'] = $user->phone;
         }
-        return Redis::get("sms_code:{$this->data['sms_code']}:{$this->data['phone']}") !== null;
+        $res = Redis::get("sms_code:{$this->data['phone']}") == $this->data['sms_code'];
+        if($res){
+            Redis::del("sms_code:{$this->data['phone']}");
+        }
     }
 
     public function message(){

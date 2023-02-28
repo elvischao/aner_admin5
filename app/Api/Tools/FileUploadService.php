@@ -1,5 +1,5 @@
 <?php
-namespace App\Api\Services\Trigonal;
+namespace App\Api\Tools;
 
 use Qiniu\Auth;
 use Qiniu\Config;
@@ -13,11 +13,13 @@ class FileUploadService{
     protected $accessKey;
     protected $secretKey;
     protected $qiniu_doman;
+    protected $qiniu_censor_image;
 
     public function __construct(){
         $this->accessKey = config('filesystems.disks.qiniu.access_key');
         $this->secretKey = config('filesystems.disks.qiniu.secret_key');
         $this->qiniu_doman = config('filesystems.disks.qiniu.domains.default');
+        $this->qiniu_censor_image = config("filesystems.disks.qiniu.censor_image");
     }
 
     /**
@@ -31,8 +33,9 @@ class FileUploadService{
         $this->directory = 'uploads/images/' . date('Y-m', time()) . '/';
         $upload_function = 'upload2' . $this->disk;
         $filename = $this->$upload_function($file);
-        // $this->qiniu_图片鉴黄审核($filename);
-        // TODO::添加开关
+        if($this->qiniu_censor_image){
+            $this->qiniu_图片鉴黄审核($filename);
+        }
         return $filename;
     }
 

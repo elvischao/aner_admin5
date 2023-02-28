@@ -1,5 +1,5 @@
 <?php
-namespace App\Api\Services\Trigonal;
+namespace App\Api\Tools;
 
 class IosPayService{
     private $itunes = 'https://buy.itunes.apple.com/verifyReceipt';  //正式
@@ -29,7 +29,7 @@ class IosPayService{
 
     public function pay($receipt_data){
         $data = '{"receipt-data":"'.$receipt_data.'"}';
-        $res = json_decode(https_request($this->itunes, $data), true);
+        $res = json_decode($this->https_request($this->itunes, $data), true);
         // 0或 21007表示请求成功了
         if(intval($res['status']) === 0 || intval($res['status']) == 21007){
             $apple_order = $res['receipt']['in_app'][0];

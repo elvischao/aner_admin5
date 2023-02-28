@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Api\Services\Trigonal;
+namespace App\Api\Tools;
 
 use AlibabaCloud\SDK\Facebody\V20191230\Facebody;
 use \Exception;
@@ -15,6 +15,7 @@ use AlibabaCloud\SDK\Facebody\V20191230\Models\SearchFaceAdvanceRequest;
 use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
 use GuzzleHttp\Psr7\Stream;
 
+# 阿里云人脸识别
 # composer require alibabacloud/facebody-20191230
 class AliyunOcrService{
     protected $accessKeyId;

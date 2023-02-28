@@ -1,10 +1,9 @@
 <?php
-namespace App\Api\Services\Trigonal;
+namespace App\Api\Tools;
 
 use Alipay\EasySDK\Kernel\Factory;
 use Alipay\EasySDK\Kernel\Util\ResponseChecker;
 use Alipay\EasySDK\Kernel\Config as AliConfig;
-use Illuminate\Support\Facades\Log;
 
 class AliyunPayService{
     public function __construct(){
@@ -88,6 +87,12 @@ class AliyunPayService{
         }
     }
 
+    /**
+     * 转账功能
+     * TODO::测试中
+     *
+     * @return void
+     */
     public function transfer(){
         try {
             $bizParams = array(

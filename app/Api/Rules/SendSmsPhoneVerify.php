@@ -19,7 +19,7 @@ class SendSmsPhoneVerify implements Rule, DataAwareRule{
 
     public function passes($attribute, $value){
         $users_repository = new UsersRepository();
-        $user = $users_repository->use_field_get_data([['phone', '=', $value]]);
+        $user = $users_repository->base_use_fields_get_data([['phone', '=', $value]]);
         if($this->data['type'] == 'register'){
             return !boolval($user);
         }else{

@@ -74,6 +74,7 @@ return [
             'bucket'    => env('QINIU_BUCKET'),  //Bucket名字
             'notify_url'=> '',  //持久化处理回调地址
             'url'       => 'http://of8kfibjo.bkt.clouddn.com/',  // 填写文件访问根url
+            'censor_image'=> env("QINIU_CENSOR_IMAGE"),  //是否使用鉴黄(bool值)
         ],
     ],
     /*

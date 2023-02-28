@@ -24,32 +24,4 @@ class BaseController extends Controller{
         // 获取部分系统设置
         $this->setting['identity_field'] = config('admin.users.user_identity')[0];
     }
-
-    /**
-     * 发送短信验证码
-     *
-     * @param string $type 场景类型，register(注册), other(其他, 登录、忘记密码、修改密码等)
-     * @param int $phone
-     * @return void
-     */
-    public function send_sms(\App\Api\Requests\SendSmsRequest $request){
-        $phone = $request->input('phone');
-        $sms_service = new SmsService();
-        $sms_service->send_sms($phone);
-        return success('发送成功');
-    }
-
-    /**
-     * 上传文件
-     *
-     * @param resource $file 文件资源句柄
-     * @return void
-     */
-    public function upload(Request $request){
-        if($request->hasFile('file')){
-            $file_upload_service = new FileUploadService();
-            return success('上传成功', ['path'=> $file_upload_service->upload_file($request->file('file'))]);
-        }
-       return error('上传文件不存在');
-    }
 }

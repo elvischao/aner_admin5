@@ -1,5 +1,5 @@
 <?php
-namespace App\Api\Services\Trigonal;
+namespace App\Api\Tools;
 
 use Illuminate\Support\Facades\Http;
 

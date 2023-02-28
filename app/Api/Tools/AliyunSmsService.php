@@ -1,5 +1,5 @@
 <?php
-namespace App\Api\Services\Trigonal;
+namespace App\Api\Tools;
 
 use AlibabaCloud\SDK\Dysmsapi\V20170525\Dysmsapi;
 use \Exception;
@@ -25,13 +25,20 @@ class AliyunSmsService{
         ]);
     }
 
-    public function aliyun_sms(string $phone, int $sms_code){
+    /**
+     * 使用阿里云发送短信验证码
+     *
+     * @param string $phone
+     * @param integer $sms_code
+     * @return void
+     */
+    public function aliyun_sms_code(string $phone, int $sms_code){
         $this->config->endpoint = "dysmsapi.aliyuncs.com";
         $client = new Dysmsapi($this->config);
         $sendSmsRequest = new SendSmsRequest([
             "phoneNumbers" => $phone,
-            "signName" => "成都亿喆鑫科技有限公司",
-            "templateCode" => "SMS_270345031",
+            "signName" => env("ALIYUN_SMS_SIGN_NAME"),
+            "templateCode" => env("ALIYUN_SMS_TEMPLATE_CODE"),
             "templateParam" => "{\"code\": \"" . $sms_code . "\"}"
         ]);
         $runtime = new RuntimeOptions([]);

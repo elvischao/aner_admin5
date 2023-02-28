@@ -3,9 +3,8 @@
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 
-Route::post('upload', [\App\Api\Controllers\BaseController::class, 'upload']);
-
-Route::post('send/sms', [\App\Api\Controllers\BaseController::class, 'send_sms']);
+Route::post('upload', [\App\Api\Controllers\ToolsController::class, 'upload']);
+Route::post('send/sms', [\App\Api\Controllers\ToolsController::class, 'send_sms']);
 
 Route::post('login/phone_smscode', [\App\Api\Controllers\LoginController::class, 'phone_smscode_login']);
 Route::post('login/identity_password', [\App\Api\Controllers\LoginController::class, 'identity_password_login']);

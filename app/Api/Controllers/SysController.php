@@ -4,6 +4,10 @@ namespace App\Api\Controllers;
 use App\Api\Controllers\BaseController;
 use Illuminate\Http\Request;
 use App\Api\Services\SysService;
+
+/**
+ * 系统相关配置
+ */
 class SysController extends BaseController{
     protected $service;
 
