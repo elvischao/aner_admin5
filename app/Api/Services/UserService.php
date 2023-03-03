@@ -10,13 +10,13 @@ use App\Api\Repositories\User\UserDetailRepository;
 use Illuminate\Support\Facades\DB;
 
 class UserService{
-    // 会员表中的数据
+    // 会员表中要被修改的数据
     protected $user_fields = ['id', 'avatar', 'nickname', 'phone'];
     // 会员表中要被查询的数据
     protected $user_select = ['id', 'avatar', 'nickname', 'phone'];
-    // 会员详情表中的数据
+    // 会员详情表中要被修改的数据
     protected $user_detail_fields = ['id_card_username'];
-    // 会员详情表中国呢要被查询的数据
+    // 会员详情表中要被查询的数据
     protected $user_detail_select = ['id_card_username'];
 
 
@@ -37,8 +37,8 @@ class UserService{
      * @return json
      */
     public function get_user_detail(int $uid){
-        $user_data = (new UsersRepository())->use_field_get_data([['id', '=', $uid]], $this->user_select);
-        $user_detail_select = (new UserDetailRepository())->use_field_get_data([['id', '=', $uid]],$this->user_detail_select);
+        $user_data = (new UsersRepository())->base_use_fields_get_data([['id', '=', $uid]], $this->user_select);
+        $user_detail_select = (new UserDetailRepository())->base_use_fields_get_data([['id', '=', $uid]],$this->user_detail_select);
         foreach($user_detail_select as $key=> $value){
             $user_data->$key = $value;
         }
@@ -67,7 +67,7 @@ class UserService{
                 }
             }
             if(count($update_data) >= 1){
-                $res = (new UsersRepository())->update_data([['id', '=', $uid]], $update_data);
+                $res = (new UsersRepository())->base_update_datas([['id', '=', $uid]], $update_data);
                 if(!$res){
                     throwBusinessException('修改失败');
                 }
@@ -80,7 +80,7 @@ class UserService{
                 }
             }
             if(count($update_data) >= 1){
-                $res = (new UserDetailRepository())->update_data([['id', '=', $uid]], $update_data);
+                $res = (new UserDetailRepository())->base_update_datas([['id', '=', $uid]], $update_data);
                 if(!$res){
                     throwBusinessException('修改失败');
                 }

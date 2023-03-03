@@ -6,13 +6,12 @@ use App\Api\Controllers\BaseController;
 
 use App\Api\Services\PayService;
 
-use App\Api\Services\Trigonal\IosPayService;
-use App\Api\Services\Trigonal\WxPayService;
+use App\Api\Tools\IosPayService;
+use App\Api\Tools\WxPayService;
 
 
 /**
  * 支付类
- * 以下支付后进行的逻辑处理均为充值功能的逻辑代码
  */
 class PayController extends BaseController{
 
@@ -21,6 +20,19 @@ class PayController extends BaseController{
     public function __construct(Request $request, PayService $PayService){
         parent::__construct($request);
         $this->service = $PayService;
+    }
+
+    /**
+     * 充值
+     *
+     * @param Request $request
+     * @return void
+     */
+    public function recharge(Request $request){
+        $amount = $request->input('amount', 0) ?? 0;
+        $pay_method = $request->input('pay_method', '') ?? '';
+        $data = $this->service->recharge_pay($this->uid, $amount, $pay_method);
+        return success("充值支付调用", $data);
     }
 
     /**
@@ -56,7 +68,8 @@ class PayController extends BaseController{
      * @return void
      */
     public function alipay_notify(Request $request){
-        $this->service->alipay_notify($request);
+        $PayService = new PayService();
+        return success("回调", $PayService->alipay_notify($request->input()));
     }
 
     /**
@@ -66,6 +79,7 @@ class PayController extends BaseController{
      * @return void
      */
     public function wxpay_notify(Request $request){
-        $this->service->wxpay_notify($request);
+        $PayService = new PayService();
+        return success("回调", $PayService->wxpay_notify($request->input()));
     }
 }

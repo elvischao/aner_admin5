@@ -73,7 +73,8 @@ class UserLoginService{
             'uid'=> $user->id,
             'avatar'=> $user->avatar,
             'phone'=> $user->phone,
-            'token'=> $this->repository->set_token($user->id)
+            'token'=> $this->repository->set_token($user->id),
+            'openid'=> $user->openid
         ];
         return $data;
     }

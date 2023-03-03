@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 
 use App\Api\Services\Trigonal\YidunMobileService;
 use App\Api\Services\Trigonal\WxminiRegisterService;
+use App\APi\Tools\WxLoginService;
 
 
 class LoginController extends BaseController{
@@ -87,5 +88,19 @@ class LoginController extends BaseController{
         $wxmini_service = new WxminiRegisterService($code, $iv, $encryptedData);
         $openid = $wxmini_service->get_data('openid');
         return success('登录成功', $this->service->login('wxmini', ['openid'=> $openid]));
+    }
+
+    /**
+     * 绑定微信公众号信息
+     *
+     * @param Request $request
+     * @return void
+     */
+    public function bind_wx_data(Request $request){
+        $code = $request->input('code');
+        $type = $request->input('type', 'openid') ?? 'openid';
+        $WxLoginService = new WxLoginService();
+        $res = $WxLoginService->bind_wx_data_operation($this->uid, $code, $type);
+        return $res ? success("绑定成功") : error("绑定失败");
     }
 }
