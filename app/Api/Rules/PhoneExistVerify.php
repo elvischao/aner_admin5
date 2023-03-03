@@ -16,7 +16,7 @@ class PhoneExistVerify implements Rule, DataAwareRule{
 
     public function passes($attribute, $value){
         $user_repository = new UsersRepository();
-        $data = $user_repository->use_field_get_data([['phone', '=', $value]]);
+        $data = $user_repository->base_use_fields_get_data([['phone', '=', $value]]);
         return !boolval($data);
     }
 

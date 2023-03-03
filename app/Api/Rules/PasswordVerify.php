@@ -16,7 +16,7 @@ class PasswordVerify implements Rule, DataAwareRule{
 
     public function passes($attribute, $value){
         $UsersRepository = new UsersRepository();
-        $user = $UsersRepository->use_field_get_data([['id', '=', $this->data['uid']]], ['password', 'password_salt']);
+        $user = $UsersRepository->base_use_fields_get_data([['id', '=', $this->data['uid']]], ['password', 'password_salt']);
         if(!$user){
             return false;
         }
