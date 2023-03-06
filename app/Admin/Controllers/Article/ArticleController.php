@@ -137,7 +137,7 @@ class ArticleController extends BaseController{
             }
             $form->select('category_id')->options(ArticleCategory::all()->pluck('name', 'id'));
             if(config('admin.article.image_show')){
-                $form->image('image')->autoUpload()->uniqueName()->saveFullUrl();
+                $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable();
             }
             if(config('admin.article.intro_show')){
                 $form->textarea('intro')->rows(3);

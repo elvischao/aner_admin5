@@ -46,7 +46,7 @@ class SysBannerController extends BaseController{
                 $tools->disableDelete();
             });
             $form->display('id');
-            $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required();
+            $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable();
             if(config('admin.banner.url_show')){
                 $form->text('url')->required();
             }

@@ -54,7 +54,7 @@ class ArticleCategoryController extends BaseController{
             $form->display('id');
             $form->text('name')->required();
             if(config('admin.article.category_image_show')){
-                $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required();
+                $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable();
             }
             if(config('admin.developer_mode')){
                 $form->switch("delete_allowed", '是否允许删除')->value(1);

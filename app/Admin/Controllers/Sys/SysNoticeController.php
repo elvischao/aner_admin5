@@ -94,7 +94,7 @@ class SysNoticeController extends BaseController{
     protected function form(){
         return Form::make(new SysNotice(), function (Form $form) {
             $form->hidden('id');
-            config('admin.notice.image_show') ? $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required() : '';
+            config('admin.notice.image_show') ? $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable() : '';
             $form->text('title')->required();
             switch(config('admin.notice.type')) {
                 case '单条富文本':

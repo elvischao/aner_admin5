@@ -51,7 +51,7 @@ class ArticleTagController extends BaseController
             $form->display('id');
             $form->text('name')->required();
             if(config('admin.article.tag_image_show')){
-                $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required();
+                $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable();
             }
 
             // 清除缓存

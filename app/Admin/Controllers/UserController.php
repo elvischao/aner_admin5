@@ -16,15 +16,13 @@ use App\Models\Log\LogUserOperation;
 use App\Models\Log\LogUserFund;
 
 
-class UserController extends BaseController
-{
+class UserController extends BaseController{
     /**
      * Make a grid builder.
      *
      * @return Grid
      */
-    protected function grid()
-    {
+    protected function grid(){
         return Grid::make(new User(), function (Grid $grid) {
             $grid->model()->orderBy('id', 'desc');
             $grid->column('id')->sortable();
@@ -76,8 +74,7 @@ class UserController extends BaseController
      *
      * @return Show
      */
-    protected function detail($id)
-    {
+    protected function detail($id){
         return Show::make($id, new User(['log_operation', 'detail']), function (Show $show) use($id){
             $show->row(function (Show\Row $show) {
                 $show->width(5)->id;
@@ -136,7 +133,7 @@ class UserController extends BaseController
     protected function form(){
         return Form::make(User::with('funds'), function (Form $form) {
             if($form->isCreating()){
-                config('admin.users.avatar_show') ? $form->image('avatar')->autoUpload()->uniqueName()->saveFullUrl()->required() : '';
+                config('admin.users.avatar_show') ? $form->image('avatar')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable() : '';
                 foreach(config('admin.users.user_identity') as $field){
                     $form->text($field)->required();
                 }
@@ -157,14 +154,14 @@ class UserController extends BaseController
                 // 同步创建资产表与详情表
                 $form->saved(function (Form $form, $result) {
                     $user_funds_repository = new \App\Api\Repositories\User\UserFundsRepository();
-                    $user_funds_repository->create_data($result);
+                    $user_funds_repository->base_create_data($result);
                     $user_detail_repository = new \App\Api\Repositories\User\UserDetailRepository();
-                    $user_detail_repository->create_data($result);
+                    $user_detail_repository->base_create_data($result);
                 });
             }else{
                 $form->tab('基本信息', function(Form $form){
                     $form->display('id');
-                    config('admin.users.avatar_show') ? $form->image('avatar')->autoUpload()->uniqueName()->saveFullUrl() : '';
+                    config('admin.users.avatar_show') ? $form->image('avatar')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable() : '';
                     foreach(config('admin.users.user_identity') as $field){
                         $form->text($field);
                     }
@@ -202,7 +199,11 @@ class UserController extends BaseController
                     }
                 });
                 $form->saved(function(Form $form, $result){
-                    (new UsersRepository())->delete_select_cache($form->model()->id);
+                    (new UsersRepository())->base_delete_select_cache($form->id ?? $form->model()->id ?? $result);
+                });
+                $form->deleted(function(Form $form, $result){
+                    $data_id = $form->model()->toArray()[0]['id'];
+                    (new UsersRepository())->base_delete_select_cache($data_id);
                 });
             }
             $form->hidden('is_login');
