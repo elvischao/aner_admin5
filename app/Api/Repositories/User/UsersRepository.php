@@ -29,7 +29,6 @@ class UsersRepository extends BaseRepository{
         UserFunds::create(['id'=> $obj->id]);
         UserDetail::create(['id'=> $obj->id]);
         return $obj;
-
     }
 
     /**

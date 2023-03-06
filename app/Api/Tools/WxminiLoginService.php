@@ -3,57 +3,66 @@ namespace App\Api\Tools;
 
 use Illuminate\Support\Facades\Http;
 
-use App\Api\Repositories\Sys\SysSettingRepository;
 use App\Api\Repositories\User\UsersRepository;
+
+use App\Api\Services\UserLoginService;
 
 
 /**
  * 微信小程序注册
  */
 class WxminiRegisterService{
-    public function __construct($code, $iv, $encryptedData){
-        //微信小程序配置
-        $sys_setting_repositories = new SysSettingRepository();
-        $this->appid = $sys_setting_repositories->use_id_get_value(16);
-        $this->secret = $sys_setting_repositories->use_id_get_value(17);
+    protected $appid;
+    protected $secret;
+    protected $repository;
 
-        //根据code获取openid
+    public function __construct(){
+        //微信小程序配置
+        $this->appid = env("WXMINI_APPID");
+        $this->secret = env("WXMINI_SECRET");
+        $this->repository = new UsersRepository();
+    }
+
+    /**
+     * 获取openid， 如果此用户还没有注册，则直接注册
+     *
+     * @param [type] $code
+     * @param [type] $iv
+     * @param [type] $encryptedData
+     * @return void
+     */
+    public function get_openid($code, $iv, $encryptedData, $parent_id){
+        $data = $this->jscode2session($code);
+        $nickname = '';
+        $avatar = '';
+        if($iv != '' && $encryptedData != ''){
+            $user_info = $this->decryptData($this->appid, $data['session_key'], $encryptedData, $iv);
+            $nickname = $user_info['nickName'];
+            $avatar = $user_info['avatarUrl'];
+        }
+        $user = $this->repository->base_use_fields_get_data([['third_party', '=', '微信小程序'], ['openid', '=', $data['openid']]]);
+        if(!$user){
+            (new UserLoginService())->register('', '', '', '', '', $avatar, $nickname, '', $parent_id, '微信小程序', $data['openid'], '');
+        }
+        return $data['openid'];
+    }
+
+    /**
+     * 访问微信小程序接口，获取会员openid
+     *
+     * @param string $code
+     * @return void
+     */
+    private function jscode2session(string $code){
         $api = "https://api.weixin.qq.com/sns/jscode2session?appid={$this->appid}&secret={$this->secret}&js_code={$code}&grant_type=authorization_code";
         $res = json_decode(Http::get($api), true);
         if(!empty($res['errcode'])){
             throwBusinessException($res['errcode']);
         }
-        $sessionKey = $res['session_key'];
-        $openid = $res['openid'];
-        if($iv != '' && $encryptedData != ''){
-            $res = $this->decryptData($this->appid, $sessionKey, $encryptedData, $iv);
-            $nickname = $res['nickName'];
-            $avatar = $res['avatarUrl'];
-        }else{
-            $nickname = '游客';
-            $avatar = '';
-        }
-
-        $user_repository = new UsersRepository();
-        $this->user = $user_repository->use_field_get_data([['openid', '=', $openid]]);
-        if(!$this->user){
-            $this->user = $this->repositories->create_data([
-                'login_type' => 'wxmini',
-                'nickname' => $nickname,
-                'avatar' => $avatar,
-                'openid' => $openid
-            ]);
-        }
-    }
-
-    /**
-     * 获取会员信息
-     *
-     * @param [type] $field
-     * @return void
-     */
-    public function get_data($field){
-        return $this->user->$field;
+        return [
+            'session_key'=> $res['session_key'],
+            'openid'=> $res['openid'],
+        ];
     }
 
     /**

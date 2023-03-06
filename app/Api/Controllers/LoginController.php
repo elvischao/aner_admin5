@@ -1,14 +1,14 @@
 <?php
 namespace App\Api\Controllers;
 
+use Illuminate\Http\Request;
+
 use App\Api\Controllers\BaseController;
 
 use App\Api\Services\UserLoginService;
 
-use Illuminate\Http\Request;
-
-use App\Api\Services\Trigonal\YidunMobileService;
-use App\Api\Services\Trigonal\WxminiRegisterService;
+use App\Api\Tools\YidunMobileService;
+use App\Api\Tools\WxminiRegisterService;
 use App\APi\Tools\WxLoginService;
 
 
@@ -84,23 +84,24 @@ class LoginController extends BaseController{
         $code = $request->input('code', '');
         $iv = $request->input('iv', '') ?? '';
         $encryptedData = $request->input('encryptedData', '') ?? '';
+        $parent_id = $request->input('parent_id', '') ?? '';
         // 此步骤会自动注册
-        $wxmini_service = new WxminiRegisterService($code, $iv, $encryptedData);
-        $openid = $wxmini_service->get_data('openid');
+        $wxmini_service = new WxminiRegisterService();
+        $openid = $wxmini_service->get_openid($code, $iv, $encryptedData, $parent_id);
         return success('登录成功', $this->service->login('wxmini', ['openid'=> $openid]));
     }
 
     /**
-     * 绑定微信公众号信息
+     * 微信公众号登录(第三方登录)
      *
      * @param Request $request
      * @return void
      */
-    public function bind_wx_data(Request $request){
-        $code = $request->input('code');
-        $type = $request->input('type', 'openid') ?? 'openid';
+    public function wx_login(Request $request){
+        $code = $request->input('code', '') ?? '';
         $WxLoginService = new WxLoginService();
-        $res = $WxLoginService->bind_wx_data_operation($this->uid, $code, $type);
-        return $res ? success("绑定成功") : error("绑定失败");
+        $openid = $WxLoginService->get_openid($this->uid, $code);
+        return success('登录成功', $this->service->login('wx', ['openid'=> $openid]));
+
     }
 }

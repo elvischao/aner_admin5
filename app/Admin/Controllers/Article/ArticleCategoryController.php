@@ -63,7 +63,7 @@ class ArticleCategoryController extends BaseController{
 
             // 清除缓存
             $form->saved(function(Form $form, $result){
-                (new ArticleCategory())->del_cache_data($form->model()->id);
+                (new ArticleCategory())->del_cache_data($form->id ?? $form->model()->id ?? $result);
             });
             $form->deleted(function(Form $form, $result){
                 $data_id = $form->model()->toArray()[0]['id'];

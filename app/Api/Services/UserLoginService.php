@@ -4,6 +4,7 @@ namespace App\Api\Services;
 
 use App\Api\Repositories\User\UsersRepository;
 use App\Api\Repositories\Sys\SysSettingRepository;
+use App\Api\Repositories\Sys\SysAdRepository;
 
 class UserLoginService{
     protected $repository;
@@ -13,16 +14,51 @@ class UserLoginService{
     }
 
     /**
-     * 注册
+     * 用户注册
+     * 用户注册唯一途径
      *
-     * @param string $type
-     * @param array $data
+     * @param string $account 账号
+     * @param string $phone 手机号
+     * @param string $email 邮箱
+     * @param string $password 密码
+     * @param string $level_password 二级密码
+     * @param string $avatar 头像
+     * @param string $nickname 昵称
+     * @param string $sex 性别
+     * @param string $parent_id 上级id
+     * @param string $login_type 第三方登录条件
+     * @param string $openid 第三方标识
+     * @param string $platform 登录平台
      * @return void
      */
-    public function register(string $type, array $data){
-        if($type == 'phone'){
-            return $this->repository->create_data($data);
+    public function register(string $account = '', string $phone = '', string $email = '', string $password = '', string $level_password = '', string $avatar = '', string $nickname = '', string $sex = '', string $parent_id = '', string $third_party = '', string $openid = '', string $login_type = ''){
+        if($third_party == ''){
+            // 非第三方登录，需要填写 account，phone，email 中的一个
+            if($account == '' && $phone == '' && $email == ''){
+                throwBusinessException('请填写账号信息');
+            }
+        }else{
+            if($openid == ''){
+                throwBusinessException('请先从第三方获取数据');
+            }
         }
+        $avatar = $avatar == '' ? (new SysAdRepository())->get_data(17)['value'] : $avatar;
+        $nickname = $nickname == '' ? '用户' . create_captcha(8, 'lowercase+uppercase+figure') : $nickname;
+        $sex = $sex == '' ? '保密' : $sex;
+        $res = $this->repository->create_data([
+            'account'=> $account,
+            'phone'=> $phone,
+            'email'=> $email,
+            'password'=> $password,
+            'level_password'=> $level_password,
+            'avatar'=> $avatar,
+            'nickname'=> $nickname,
+            'sex'=> $sex,
+            'parent_id'=> $parent_id,
+            'login_type'=> $login_type,
+            'openid'=> $openid
+        ]);
+        return $res;
     }
 
     /**
@@ -42,6 +78,7 @@ class UserLoginService{
             'phone_smscode'=> 'phone',
             'yidun_oauth'=> 'phone',
             'wxmini'=> 'openid',
+            'wx'=> 'openid',
             'identity_password'=> empty($data['identity_type']) ? 'phone' : $data['identity_type']
         ][$type];
         // 判断传入的参数中是否有此标识参数
@@ -49,7 +86,7 @@ class UserLoginService{
             throwBusinessException('账号或密码错误！');
         }
         // 通过标识获取指定会员
-        $user = $this->repository->use_field_get_data([[$identity_type, '=', $data[$identity_type]]]);
+        $user = $this->repository->base_use_fields_get_data([[$identity_type, '=', $data[$identity_type]]]);
         // 短信验证码和账号密码登录需要判断会员是否存在
         if(in_array($type, ['phone_smscode', 'identity_password'])){
             if(!boolval($user)){
@@ -65,7 +102,7 @@ class UserLoginService{
         // 云盾登录如果会员不存在则直接注册
         if(in_array($type, ['yidun_oauth'])){
             if(!boolval($user)){
-                $user = $this->repository->create_data(['phone'=> $user->phone]);
+                $user = $this->register('', $user->phone);
             }
         }
         // 组合返回数据

@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Http;
 
 use App\Api\Repositories\User\UsersRepository;
 
+use App\Api\Services\UserLoginService;
+
 
 /**
  * 微信公众号登录
@@ -14,44 +16,72 @@ class WxLoginService{
     protected $appsecret;
 
     public function __construct(){
-        $this->appid = 'wxd7959af203d9633b';
-        $this->appsecret = '02ddff94192e9c2858661e56d6fa16ba';
+        $this->appid = env("WX_APPID");
+        $this->appsecret = env("WX_APPSECRET");
     }
 
     /**
-     * 获取公众号信息
+     * 获取用户在公众号中的信息
+     * 包含用户注册逻辑
+     * TODO::当前逻辑为，通过code获取 access_token, 然后通过 access_token 获取用户信息，如果openid不存在则注册账号
+     *
+     * @param string $code
+     * @return string openid
      */
-    public function bind_wx_data_operation(int $uid, string $code, string $type){
+    public function get_openid(string $code):string{
+        $tokens = $this->access_token($code);
+        $user_info = $this->get_userinfo($tokens['access_token'], $tokens['openid']);
+        // 查询是否存在此用户，如果不存在则注册
+        $UsersRepository = new UsersRepository();
+        $user = $UsersRepository->base_use_fields_get_data([['third_party', '=', '微信公众号'], ['openid', '=', $user_info['openid']]]);
+        if(!$user){
+            (new UserLoginService())->register('', '', '', '', '', $user_info['headimgurl'], $user_info['nickname'], '', '', '微信公众号', $user_info['openid'], '');
+        }
+        return $user_info['openid'];
+    }
+
+    private function access_token(string $code):array{
         $token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=' . $this->appid . '&secret=' . $this->appsecret . '&code=' . $code . '&grant_type=authorization_code';
         $token = json_decode(file_get_contents($token_url));
         if(isset($token->errcode)){
             throwBusinessException($token->errcode . ': ' . $token->errmsg);
         }
-        if($type == 'openid'){
-            $data['openid'] = $token->openid;
-        }else{
-            $refresh_token = $token->refresh_token;
-            $access_token_url = 'https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=' . $this->appid . '&grant_type=refresh_token&refresh_token=' . $refresh_token;
-            $access_token = json_decode(file_get_contents($access_token_url));
-            if(isset($access_token->errcode)){
-                throwBusinessException($access_token->errcode . ': ' . $access_token->errmsg);
-            }
-            $user_info_url = 'https://api.weixin.qq.com/sns/userinfo?access_token=' . $access_token->access_token . '&openid=' . $access_token->openid . '&lang=zh_CN';
-            $user_info = json_decode(file_get_contents($user_info_url));
-            if(isset($user_info->errcode)){
-                throwBusinessException($user_info->errcode . ': ' . $user_info->errmsg);
-            }
-            $data['openid'] = $user_info->openid;
-            $data['nickname'] = $user_info->nickname;
-            // $data['sex'] = $user_info->sex;
-            // $data['language'] = $user_info->language;
-            // $data['city'] = $user_info->city;
-            // $data['province'] = $user_info->province;
-            // $data['country'] = $user_info->country;
-            $data['headimgurl'] = $user_info->headimgurl;
+        return [
+            'access_token'=> $token->access_token,
+            'refresh_token'=> $token->refresh_token,
+            'openid'=> $token->openid
+        ];
+    }
+
+    private function refresh_token(string $refresh_token):array{
+        $access_token_url = 'https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=' . $this->appid . '&grant_type=refresh_token&refresh_token=' . $refresh_token;
+        $access_token = json_decode(file_get_contents($access_token_url));
+        if(isset($access_token->errcode)){
+            throwBusinessException($access_token->errcode . ': ' . $access_token->errmsg);
         }
-        $res = (new UsersRepository())->base_update_datas([['id', '=', $uid]], $data);
-        return boolval($res);
+        return [
+            'access_token'=> $access_token->access_token,
+            'refresh_token'=> $access_token->refresh_token,
+            'openid'=> $access_token->openid
+        ];
+    }
+
+    private function get_userinfo(string $access_token, string $openid):array{
+        $user_info_url = 'https://api.weixin.qq.com/sns/userinfo?access_token=' . $access_token . '&openid=' . $openid . '&lang=zh_CN';
+        $user_info = json_decode(file_get_contents($user_info_url));
+        if(isset($user_info->errcode)){
+            throwBusinessException($user_info->errcode . ': ' . $user_info->errmsg);
+        }
+        return [
+            'openid'=> $user_info->openid,
+            'nickname'=> $user_info->nickname,
+            'sex'=> $user_info->sex,
+            'language'=> $user_info->language,
+            'city'=> $user_info->city,
+            'province'=> $user_info->province,
+            'country'=> $user_info->country,
+            'headimgurl'=> $user_info->headimgurl,
+        ];
     }
 }
 

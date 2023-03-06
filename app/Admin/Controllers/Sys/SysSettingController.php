@@ -110,7 +110,11 @@ class SysSettingController extends BaseController{
                 }
             });
             $form->saved(function(Form $form, $result){
-                (new SysSetting())->del_cache_data($form->id);
+                (new SysSetting())->del_cache_data($form->id ?? $form->model()->id ?? $result);
+            });
+            $form->deleted(function(Form $form, $result){
+                $data_id = $form->model()->toArray()[0]['id'];
+                (new SysSetting())->del_cache_data($data_id);
             });
             $form->disableResetButton();
             $form->disableViewCheck();

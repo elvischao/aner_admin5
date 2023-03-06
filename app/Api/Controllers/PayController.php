@@ -49,19 +49,6 @@ class PayController extends BaseController{
     }
 
     /**
-     * 微信小程序支付
-     *
-     * @param \App\Api\Requests\PayRequest $request
-     * @return void
-     */
-    public function wxmini_pay(Request $request){
-        $number = $request->input('number');
-        $wxmini_pay_service = new WxPayService();
-        $result = $wxmini_pay_service->mini_pay($this->uid, $number);
-        return $result ? success('支付发起', $result) : error('支付发起失败');
-    }
-
-    /**
      * 支付宝回调
      *
      * @param Request $request
