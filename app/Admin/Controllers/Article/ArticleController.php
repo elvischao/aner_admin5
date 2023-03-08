@@ -2,24 +2,34 @@
 
 namespace App\Admin\Controllers\Article;
 
-use App\Admin\Controllers\BaseController;
-use App\Admin\Repositories\Article\Article;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
-use App\Models\Article\ArticleCategory;
-use App\Models\Article\ArticleTag;
-
 use Dcat\Admin\Widgets\Card;
 
+use App\Admin\Controllers\BaseController;
+use App\Admin\Repositories\Article\Article;
+use App\Admin\Repositories\Article\ArticleTag;
+use App\Admin\Repositories\Article\ArticleCategory;
+
+
 class ArticleController extends BaseController{
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    protected int $id;
+    protected string $tag_ids;
+    protected int $category_id;
+    // protected string $title;
+    protected string $author;
+    protected string $intro;
+    protected string $keyword;
+    protected string $image;
+    protected string $content;
+    protected int $delete_allowed;
+    protected int $update_allowed;
+    protected $category;
+
+
     protected function grid(){
-        return Grid::make(new Article(), function (Grid $grid) {
+        return Grid::make(new Article(['category']), function (Grid $grid) {
             $grid->fixColumns(3, -3);
             $grid->model()->orderBy('id', 'desc');
             $grid->column('id')->width("8%")->sortable();
@@ -29,18 +39,22 @@ class ArticleController extends BaseController{
             }
             if(config('admin.article.tag_show')){
                 $grid->column('tag_ids')->width("15%")->display(function(){
+                    $str = '';
                     if($this->tag_ids != ''){
-                        $tag = ArticleTag::whereIn('id', json_decode($this->tag_ids))->get();
-                        $str = '';
+                        $tag = (new ArticleTag())->use_ids_get_data($this->tag_ids);
                         foreach ($tag as $value) {
                             $str .= '<span class="label" style="background:#586cb1">' . $value->name . '</span>&nbsp;';
                         }
-                        return $str;
                     }
+                    return $str;
                 });
             }
             $grid->column('category_id')->display(function(){
-                return ArticleCategory::where('id', $this->category_id)->value('name');
+                try{
+                    return $this->category->name;
+                }catch (\Throwable $th){
+                    return "分类已删除";
+                }
             })->width("10%");
             if(config('admin.article.author_show')){
                 $grid->column('author')->width("10%");
@@ -69,14 +83,14 @@ class ArticleController extends BaseController{
             });
 
             $grid->selector(function (Grid\Tools\Selector $selector) {
-                $selector->select('category_id', '分类', ArticleCategory::all()->pluck('name', 'id'));
+                $selector->select('category_id', '分类', (new ArticleCategory())->get_all_data());
             });
 
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('id');
                 $filter->like('title');
                 if(config('admin.article.tag_show')){
-                    $filter->in('tag_ids')->multipleSelect(ArticleTag::all()->pluck('name', 'id'));
+                    $filter->in('tag_ids')->multipleSelect((new ArticleTag())->get_all_data());
                 }
                 $filter->between('created_at')->datetime();
             });
@@ -97,7 +111,7 @@ class ArticleController extends BaseController{
             $show->field('author');
             $show->field('image')->image();
             $show->field('tag_ids')->as(function(){
-                $tag = ArticleTag::whereIn('id', json_decode($this->tag_ids))->get();
+                $tag = (new ArticleTag())->use_ids_get_data($this->tag_ids);
                 $str = '';
                 foreach ($tag as $value) {
                     $str .= $value->name . ' ';
@@ -105,7 +119,7 @@ class ArticleController extends BaseController{
                 return $str;
             });
             $show->field('category_id')->as(function(){
-                return ArticleCategory::where('id', $this->category_id)->value('name');
+                return (new ArticleCategory())->use_id_get_name($this->category_id);
             });;
             $show->field('intro');
             $show->field('keyword');
@@ -131,11 +145,11 @@ class ArticleController extends BaseController{
                 $form->text('author');
             }
             if(config('admin.article.tag_show')){
-                $form->checkbox('tag_ids')->options(ArticleTag::all()->pluck('name', 'id'))->saving(function ($value) {
+                $form->checkbox('tag_ids')->options((new ArticleTag())->get_all_data())->saving(function ($value) {
                     return json_encode($value);
                 });
             }
-            $form->select('category_id')->options(ArticleCategory::all()->pluck('name', 'id'));
+            $form->select('category_id')->options((new ArticleCategory())->get_all_data());
             if(config('admin.article.image_show')){
                 $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable();
             }

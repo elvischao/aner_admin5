@@ -12,11 +12,16 @@ use Illuminate\Support\Facades\Redis;
 use Dcat\Admin\Widgets\Card;
 
 class SysAdController extends BaseController{
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    protected int $id;
+    protected int $parent_id;
+    // protected string $title;
+    protected string $type;
+    protected string $value;
+    protected string $content;
+    protected string $image;
+    protected int $update_allowed;
+    protected int $delete_allowed;
+
     protected function grid(){
         return Grid::make(new SysAd(), function (Grid $grid) {
             $grid->column('id')->sortable();
@@ -49,11 +54,6 @@ class SysAdController extends BaseController{
         });
     }
 
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
     protected function form(){
         return Form::make(new SysAd(), function (Form $form) {
             $form->tools(function (Form\Tools $tools) {

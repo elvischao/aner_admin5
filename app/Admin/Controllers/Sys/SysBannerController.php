@@ -9,11 +9,10 @@ use Dcat\Admin\Show;
 use App\Admin\Controllers\BaseController;
 
 class SysBannerController extends BaseController{
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    protected int $id;
+    protected string $image;
+    protected string $url;
+
     protected function grid(){
         if(config('admin.banner.banner_show') == false){
             return admin_error('error', '当前已关闭轮播图功能，请删除此目录或联系管理员打开轮播图功能');
@@ -34,11 +33,6 @@ class SysBannerController extends BaseController{
         });
     }
 
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
     protected function form(){
         return Form::make(new SysBanner(), function (Form $form) {
             $form->tools(function (Form\Tools $tools) {

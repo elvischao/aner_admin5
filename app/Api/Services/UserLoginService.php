@@ -105,6 +105,10 @@ class UserLoginService{
                 $user = $this->register('', $user->phone);
             }
         }
+        // 判断用户是否已冻结
+        if($user->is_login == 0){
+            throwBusinessException('当前用户已被冻结');
+        }
         // 组合返回数据
         $data = [
             'uid'=> $user->id,

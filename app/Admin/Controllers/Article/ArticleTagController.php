@@ -10,8 +10,11 @@ use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 
-class ArticleTagController extends BaseController
-{
+class ArticleTagController extends BaseController{
+    protected int $id;
+    protected string $name;
+    protected string $image;
+
     /**
      * Make a grid builder.
      *

@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 
-class ArticleTag extends Model
-{
+class ArticleTag extends Model{
 	use HasDateTimeFormatter;
     use SoftDeletes;
 

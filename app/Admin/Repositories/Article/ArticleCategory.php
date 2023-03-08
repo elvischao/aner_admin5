@@ -14,6 +14,14 @@ class ArticleCategory extends EloquentRepository{
      */
     protected $eloquentClass = Model::class;
 
+    public function get_all_data(){
+        return $this->eloquentClass::all()->pluck('name', 'id');
+    }
+
+    public function use_id_get_name(int $id){
+        return $this->eloquentClass::where('id', $id)->value('name');
+    }
+
     /**
      * 删除api接口中的缓存
      *

@@ -13,7 +13,7 @@ class UserService{
     // 会员表中要被修改的数据
     protected $user_fields = ['id', 'avatar', 'nickname', 'phone'];
     // 会员表中要被查询的数据
-    protected $user_select = ['id', 'avatar', 'nickname', 'phone'];
+    protected $user_select = ['id', 'avatar', 'nickname', 'phone', 'is_login'];
     // 会员详情表中要被修改的数据
     protected $user_detail_fields = ['id_card_username'];
     // 会员详情表中要被查询的数据

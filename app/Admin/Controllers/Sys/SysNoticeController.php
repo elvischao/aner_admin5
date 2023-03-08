@@ -11,11 +11,11 @@ use App\Admin\Controllers\BaseController;
 use App\Models\Sys\SysNotice as SysNoticeModel;
 
 class SysNoticeController extends BaseController{
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    protected int $id;
+    // protected string $title;
+    protected string $content;
+    protected string $image;
+
     protected function grid(){
         if(config('admin.notice.notice_show') == false){
             return admin_error('error', '当前已关闭公告功能，请删除此目录或联系管理员打开公告功能');
@@ -65,13 +65,6 @@ class SysNoticeController extends BaseController{
         });
     }
 
-    /**
-     * Make a show builder.
-     *
-     * @param mixed $id
-     *
-     * @return Show
-     */
     protected function detail($id){
         return Show::make($id, new SysNotice(), function (Show $show) {
             $show->field('id');
@@ -86,11 +79,6 @@ class SysNoticeController extends BaseController{
         });
     }
 
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
     protected function form(){
         return Form::make(new SysNotice(), function (Form $form) {
             $form->hidden('id');

@@ -1,23 +1,41 @@
 <?php
 namespace App\Api\Repositories\Log;
 
-use App\Api\Repositories\BaseRepository;
-use App\Models\Log\LogSysMessage as Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
+
+use App\Models\Log\LogSysMessage as Model;
+
+use App\Api\Repositories\BaseRepository;
+use App\Admin\Repositories\Log\LogSysMessage as AdminLogSysMessage;
+
 
 class LogSysMessageRepository extends BaseRepository{
     protected $eloquentClass = Model::class;
 
     /**
-     * 删除缓存数据
+     * 通过uid获取会员当前页的系统消息数据
      *
-     * @param int $uid 会员id
-     * @return bool
+     * @param integer $uid
+     * @param integer $page
+     * @param integer $limit
+     * @return array
      */
-    public function delete_cache($uid){
-        Cache::tags(["sys_message:{$uid}"])->flush();
-        return true;
+    public function use_uid_get_datas_form_redis(int $uid, int $page = 1, int $limit = 10):array{
+        return (new AdminLogSysMessage())->use_uid_get_datas_form_redis($uid, $page, $limit);
+    }
+
+    /**
+     * 根据id获取系统消息数据
+     * TODO::没有做验证，如果要验证要么在内容中添加uid数据(数据存储量大)，要么查询当前会员的全部系统消息id然后进行对比(感觉查询过多)
+     *
+     * @param integer $id
+     * @param integer $uid
+     * @return array
+     */
+    public function use_id_get_data_form_redis(int $id, int $uid = null):array{
+        $data = (new AdminLogSysMessage())->use_id_get_data_form_redis($id);
+        return $data;
     }
 
     /**

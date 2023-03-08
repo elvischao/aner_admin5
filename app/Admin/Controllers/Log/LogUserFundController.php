@@ -7,24 +7,31 @@ use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
 use App\Admin\Controllers\BaseController;
+use Exception;
 
-class LogUserFundController extends BaseController
-{
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
-    protected function grid()
-    {
-        return Grid::make(new LogUserFund(), function (Grid $grid) {
+class LogUserFundController extends BaseController{
+    protected int $id;
+    protected int $uid;
+    protected string $number;
+    protected string $coin_type;
+    protected string $fund_type;
+    protected string $content;
+    protected string $remark;
+    protected $user;
+
+    protected function grid(){
+        return Grid::make(new LogUserFund(['user']), function (Grid $grid) {
             $grid->model()->orderBy('id', 'desc');
             $grid->column('id')->sortable();
             $grid->column('uid');
             $sys_user = config('admin.users');
             $grid->column('user_identity')->display(function() use($sys_user){
                 $identity = $sys_user['user_identity'][0];
-                return $this->user->$identity;
+                try{
+                    return $this->user->$identity;
+                }catch(\Throwable $th){
+                    return "此会员已注销";
+                }
             });
             $grid->column('number');
             $grid->column('coin_type');

@@ -23,19 +23,19 @@ class UserLogService{
     /**
      * 获取系统消息列表
      *
-     * @param int $uid 会员id
-     * @param int $page 页码
+     * @param integer $uid 会员id
+     * @param integer $page 页码
      * @param integer $limit 每页条数
      * @return void
      */
-    public function get_sys_message_list($uid, $page, $limit = 10){
+    public function get_sys_message_list(int $uid, int $page, int $limit = 10):array{
         $LogSysMessageRepository = new LogSysMessageRepository();
+        $data = $LogSysMessageRepository->use_uid_get_datas_form_redis($uid, $page, $limit);
         $list_read = config('admin.sys_message.list_read');
-        $data = $LogSysMessageRepository->base_use_fields_get_list([['uid', 'in', [0, $uid]]], $page, $limit, ['id', 'desc'], ['id', 'title', 'image', 'updated_at']);
         foreach($data as &$value){
-            $value->is_read = $LogSysMessageRepository->get_read_status($uid, $value->id);
+            $value['is_read'] = $LogSysMessageRepository->get_read_status($uid, $value['id']);
             if($list_read){
-                $LogSysMessageRepository->set_read_status($uid, $value->id);
+                $LogSysMessageRepository->set_read_status($uid, $value['id']);
             }
         }
         return $data;
@@ -44,14 +44,14 @@ class UserLogService{
     /**
      * 获取系统消息详情
      *
-     * @param int $uid 会员id
-     * @param int $id 系统消息id
-     * @return void
+     * @param integer $uid 会员id
+     * @param integer $id 系统消息id
+     * @return array
      */
-    public function get_sys_message_detail($uid, $id){
+    public function get_sys_message_detail(int $uid, int $id):array{
         $LogSysMessageRepository = new LogSysMessageRepository();
-        $data = $LogSysMessageRepository->base_use_fields_get_data([['id', '=', $id]]);
-        $LogSysMessageRepository->set_read_status($uid, $data->id);  # 设置为已读（无论设置如何，这里必须设置已读）
+        $data = $LogSysMessageRepository->use_id_get_data_form_redis($id);
+        $LogSysMessageRepository->set_read_status($uid, $data['id']);  # 设置为已读（无论设置如何，这里必须设置已读）
         return $data;
     }
 }

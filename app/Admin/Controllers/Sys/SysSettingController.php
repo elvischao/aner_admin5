@@ -11,6 +11,15 @@ use Dcat\Admin\Widgets\Tab;
 use App\Models\Sys\SysSetting as SysSettingModel;
 
 class SysSettingController extends BaseController{
+    protected int $id;
+    protected int $parent_id;
+    // protected string $title;
+    protected string $input_type;
+    protected string $value;
+    protected string $remark;
+    protected int $update_allowed;
+    protected int $delete_allowed;
+
 
     protected function grid(){
         return Grid::make(new SysSetting(), function (Grid $grid) {
@@ -39,6 +48,14 @@ class SysSettingController extends BaseController{
                     return $column->select(explode(',', $this->remark));
                 }
             });
+            $grid->actions(function (Grid\Displayers\Actions $actions) {
+                if($this->delete_allowed == 0){
+                    $actions->disableDelete();
+                }
+                if($this->update_allowed == 0){
+                    $actions->disableEdit();
+                }
+            });
             if(config('admin.developer_mode') == false){
                 $grid->disableEditButton();
                 $grid->disableDeleteButton();
@@ -57,15 +74,7 @@ class SysSettingController extends BaseController{
         });
     }
 
-    /**
-     * Make a show builder.
-     *
-     * @param mixed $id
-     *
-     * @return Show
-     */
-    protected function detail($id)
-    {
+    protected function detail($id){
         return Show::make($id, new SysSetting(), function (Show $show) {
             $show->field('id');
             $show->field('parent_id');
@@ -78,13 +87,7 @@ class SysSettingController extends BaseController{
         });
     }
 
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
-    protected function form()
-    {
+    protected function form(){
         return Form::make(new SysSetting(), function (Form $form) {
             $form->tools(function (Form\Tools $tools) {
                 $tools->disableView();
@@ -99,6 +102,10 @@ class SysSettingController extends BaseController{
             $form->select('input_type')->options(['text'=> '普通字符', 'select'=> '下拉选项', 'redio'=> '单选项', 'onoff'=> '开关'])->when(['select', 'redio'], function(Form $form){
                 $form->tags('remark')->help('仅在select、redio类型的表单中有效，每个选项以逗号隔开');
             });
+            if(config('admin.developer_mode')){
+                $form->switch("delete_allowed", '是否允许删除')->value(1);
+                $form->switch("update_allowed", '是否允许修改')->value(1)->help('这里仅限制进入修改内页，而不是行内修改');
+            }
             $form->footer(function ($footer) {
                 $footer->disableViewCheck();
             });

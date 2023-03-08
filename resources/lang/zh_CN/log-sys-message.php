@@ -7,7 +7,7 @@ return [
         'sysmessage'=> '系统消息'
     ],
     'fields' => [
-        'uid' => '会员id',
+        'uids' => '会员id',
         'title' => '标题',
         'image' => '图片',
         'content' => '内容',

@@ -10,6 +10,12 @@ use Dcat\Admin\Show;
 
 
 class ArticleCategoryController extends BaseController{
+    protected int $id;
+    protected string $name;
+    protected string $image;
+    protected int $delete_allowed;
+    protected int $update_allowed;
+
     /**
      * Make a grid builder.
      *

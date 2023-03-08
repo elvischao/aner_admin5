@@ -32,7 +32,7 @@ class UserLogController extends BaseController{
     public function sys_message_log(Request $request){
         $page = $request->input('page', 1);
         $limit = $request->input('limit', 10);
-        return success('系统消息1', (new UserLogService())->get_sys_message_list($this->uid, $page, $limit));
+        return success('系统消息', (new UserLogService())->get_sys_message_list($this->uid, $page, $limit));
     }
 
     /**
@@ -43,6 +43,6 @@ class UserLogController extends BaseController{
      */
     public function sys_message_detail(Request $request){
         $id = $request->input('id', 0);
-        return success('系统消息2', (new UserLogService())->get_sys_message_detail($this->uid, $id));
+        return success('系统消息', (new UserLogService())->get_sys_message_detail($this->uid, $id));
     }
 }

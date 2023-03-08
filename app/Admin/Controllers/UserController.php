@@ -17,11 +17,24 @@ use App\Models\Log\LogUserFund;
 
 
 class UserController extends BaseController{
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
+    protected int $id;
+    protected string $avatar;
+    protected string $account;
+    protected string $phone;
+    protected string $email;
+    protected string $nickname;
+    protected string $password;
+    protected string $level_password;
+    protected int $parent_id;
+    protected string $sex;
+    protected int $is_login;
+    protected string $login_type;
+    protected string $unionid;
+    protected string $openid;
+    protected string $third_party;
+    protected $funds;
+    protected $parent;
+
     protected function grid(){
         return Grid::make(new User(), function (Grid $grid) {
             $grid->model()->orderBy('id', 'desc');
@@ -42,7 +55,6 @@ class UserController extends BaseController{
                 });
             }
             if($sys_user['parent_show']){
-                $grid->column('parent_id', '上级ID');
                 $grid->column('parent.phone', '上级标识')->display(function() use($sys_user){
                     if($this->parent_id == 0){
                         return "";
@@ -91,37 +103,37 @@ class UserController extends BaseController{
                 $show->width(6)->field('detail.id_card_username', '真实姓名');
                 $show->width(6)->field('detail.id_card_code', '身份证号');
             });
-            $show->relation('会员操作记录', function ($model) {
-                $grid = new Grid(new LogUserOperation);
-                $grid->model()->where('uid', $model->id);
-                $grid->id()->width('15%');
-                $grid->content('操作')->width('40%');
-                $grid->ip()->width('15%');;
-                $grid->created_at();
-                $grid->disableRefreshButton();
-                $grid->disableFilterButton();
-                $grid->disableCreateButton();
-                $grid->disableRowSelector();
-                $grid->disableActions();
-                return $grid;
-            });
-            $show->relation('会员资产记录', function ($model) {
-                $grid = new Grid(new LogUserFund);
-                $grid->model()->where('uid', $model->id);
-                $grid->id()->width("10%");
-                $grid->column('number', '金额')->width("10%");
-                $grid->column('coin_type', '资金类型')->width("10%");
-                $grid->column('fund_type', '操作类型')->width("10%");
-                $grid->column('content', '详细说明')->width("20%");
-                $grid->column('remark', '备注')->width('15%');
-                $grid->column('created_at');
-                $grid->disableRefreshButton();
-                $grid->disableFilterButton();
-                $grid->disableCreateButton();
-                $grid->disableRowSelector();
-                $grid->disableActions();
-                return $grid;
-            });
+            // $show->relation('会员操作记录', function ($model) {
+            //     $grid = new Grid(new LogUserOperation);
+            //     $grid->model()->where('uid', $model->id);
+            //     $grid->id()->width('15%');
+            //     $grid->content('操作')->width('40%');
+            //     $grid->ip()->width('15%');;
+            //     $grid->created_at();
+            //     $grid->disableRefreshButton();
+            //     $grid->disableFilterButton();
+            //     $grid->disableCreateButton();
+            //     $grid->disableRowSelector();
+            //     $grid->disableActions();
+            //     return $grid;
+            // });
+            // $show->relation('会员资产记录', function ($model) {
+            //     $grid = new Grid(new LogUserFund);
+            //     $grid->model()->where('uid', $model->id);
+            //     $grid->id()->width("10%");
+            //     $grid->column('number', '金额')->width("10%");
+            //     $grid->column('coin_type', '资金类型')->width("10%");
+            //     $grid->column('fund_type', '操作类型')->width("10%");
+            //     $grid->column('content', '详细说明')->width("20%");
+            //     $grid->column('remark', '备注')->width('15%');
+            //     $grid->column('created_at');
+            //     $grid->disableRefreshButton();
+            //     $grid->disableFilterButton();
+            //     $grid->disableCreateButton();
+            //     $grid->disableRowSelector();
+            //     $grid->disableActions();
+            //     return $grid;
+            // });
         });
     }
 
@@ -154,9 +166,9 @@ class UserController extends BaseController{
                 // 同步创建资产表与详情表
                 $form->saved(function (Form $form, $result) {
                     $user_funds_repository = new \App\Api\Repositories\User\UserFundsRepository();
-                    $user_funds_repository->base_create_data($result);
+                    $user_funds_repository->base_create_data(['id'=> $result]);
                     $user_detail_repository = new \App\Api\Repositories\User\UserDetailRepository();
-                    $user_detail_repository->base_create_data($result);
+                    $user_detail_repository->base_create_data(['id'=> $result]);
                 });
             }else{
                 $form->tab('基本信息', function(Form $form){
@@ -196,6 +208,10 @@ class UserController extends BaseController{
                     }
                     if($form->level_password == null){
                         $form->deleteInput('level_password');
+                    }
+                    // 如果是冻结会员，要删除此会员当前登录的token
+                    if($form->is_login === '0'){
+                        (new UsersRepository())->delete_token($form->model()->id);
                     }
                 });
                 $form->saved(function(Form $form, $result){
