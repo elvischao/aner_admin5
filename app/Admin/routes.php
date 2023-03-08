@@ -28,4 +28,6 @@ Route::group([
     $router->resource('log/userfund', 'Log\LogUserFundController');
     $router->resource('log/sysmessage', 'Log\LogSysMessageController');
 
+    $router->resource('setting/test', 'Idx\IdxSettingController');
+
 });
