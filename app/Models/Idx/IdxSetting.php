@@ -23,6 +23,9 @@ class IdxSetting extends Model{
             // '<分类字段名>'=> [
             //     'title'=> '<此分类页面的标题>',
             // ],
+            'test'=> [
+                'title'=> '测试分类',
+            ]
         ];
     }
 
@@ -32,4 +35,9 @@ class IdxSetting extends Model{
      *   return ['<字段含义>', '<字段含义>', '<字段含义>'];
      * }
      */
+
+     //TODO::测试用
+     public static function test_fields(){
+        return ['a', 'b', 'c'];
+     }
 }

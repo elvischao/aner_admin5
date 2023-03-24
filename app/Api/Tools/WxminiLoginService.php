@@ -25,7 +25,7 @@ class WxminiRegisterService{
 
     /**
      * 获取openid， 如果此用户还没有注册，则直接注册
-     * 
+     *
      * 当前小程序的政策为：所有用户解析出来的昵称和头像都是微信默认，所以我们可以不需要 iv 和 encryptedData 参数。
      *
      * @param [type] $code

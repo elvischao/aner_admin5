@@ -6,6 +6,8 @@ use Alipay\EasySDK\Kernel\Util\ResponseChecker;
 use Alipay\EasySDK\Kernel\Config as AliConfig;
 
 class AliyunPayService{
+    protected $config;
+
     public function __construct(){
         $this->config = [
             // 必填-支付宝分配的 app_id
@@ -102,9 +104,9 @@ class AliyunPayService{
                 "biz_scene" => "DIRECT_TRANSFER",
                 "order_title" => '2022-商家提现',
                 "payee_info"=> [
-                    "identity"=> '17839935708',
+                    "identity"=> '178xxxxxxxx',
                     "identity_type"=> "ALIPAY_LOGON_ID",
-                    "name"=> "许远航",
+                    "name"=> "许xx",
                 ],
             );
             $result = Factory::util()->generic()->execute("alipay.fund.trans.uni.transfer", [], $bizParams);

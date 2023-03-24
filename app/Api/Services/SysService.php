@@ -6,6 +6,7 @@ use App\Api\Repositories\Sys\SysNoticeRepository;
 use App\Api\Repositories\Sys\SysAdRepository;
 use App\Api\Repositories\Article\ArticleRepository;
 use App\Api\Repositories\Article\ArticleCategoryRepository;
+use App\Api\Repositories\Idx\IdxSettingRepository;
 
 
 class SysService{
@@ -135,5 +136,27 @@ class SysService{
         }
         $data = $ArticleRepository->disposal_data($data);
         return $data;
+    }
+
+
+    /**
+     * 获取指定类型的项目设置
+     *
+     * @param string $type
+     * @return array
+     */
+    public function get_setting_list(string $type):array{
+        $IdxSettingRepository = new IdxSettingRepository();
+        $res = $IdxSettingRepository->base_use_fields_get_list([['type', '=', $type]], 1, 1000);
+        $fields = $IdxSettingRepository->get_fields_name($type);
+        $data = [];
+        foreach($res as $v){
+            $temp = [];
+            foreach(range(0, count($fields) - 1) as $key){
+                $temp[$fields[$key]] = $v['value' . $key];
+            }
+            $data[] = $temp;
+        }
+        return ['msg'=> $IdxSettingRepository->get_type_name($type), 'data'=> $data];
     }
 }

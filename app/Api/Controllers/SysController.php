@@ -96,4 +96,16 @@ class SysController extends BaseController{
         $data = $this->service->get_article_detail($id);
         return success("文章详情", $data);
     }
+
+    /**
+     * 获取项目设置
+     *
+     * @param Request $request
+     * @param [type] $type
+     * @return void
+     */
+    public function idx_setting(Request $request, $type){
+        $res = $this->service->get_setting_list($type);
+        return success($res['msg'], $res['data']);
+    }
 }

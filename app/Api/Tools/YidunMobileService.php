@@ -4,11 +4,18 @@ namespace App\Api\Tools;
 
 class YidunMobileService{
     private static $url = "https://ye.dun.163.com/v1/oneclick/check";
-    private static $secretId = '665d6b42a3668dfc11a124f4764a7133';
-    private static $businessId = '5f5569ca10db4c0e84a4a9ce871c3afb';
+    private static $secretId = env("YIDUN_SECRET_ID");
+    private static $businessId = env("YIDUN_BUSINESS_ID");
     private static $version = 'v1';
-    private static $secretKey = 'f7e074675480f2a1fdb784d9b21a0b99';
+    private static $secretKey = env("YIDUN_SECRET_KEY");
 
+    /**
+     * TODO::返回数据未知
+     *
+     * @param [type] $token
+     * @param [type] $accessToken
+     * @return void
+     */
     public static function oauth($token, $accessToken){
         $params["token"] = $token;
         $params["accessToken"] = $accessToken;
@@ -34,7 +41,7 @@ class YidunMobileService{
         if($result['code'] == '401'){
             throwBusinessException("401，登录失败");
         }
-        return ;
+        return $result;
     }
 
     public static function gen_signature($secretKey, $params){
