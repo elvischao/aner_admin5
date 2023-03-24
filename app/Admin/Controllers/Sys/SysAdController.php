@@ -67,7 +67,7 @@ class SysAdController extends BaseController{
                     $form->select("type", '内容类型')->options(['文字'=> '文字', '图片'=> '图片', '富文本'=> '富文本'])->when('文字', function(Form $form){
                         $form->text('value');
                     })->when('图片', function(Form $form){
-                        $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->required()->removable(false)->retainable();
+                        $form->image('image')->autoUpload()->uniqueName()->saveFullUrl()->removable(false)->retainable();
                     })->when("富文本", function(Form $form){
                         $form->editor('content')->height('600')->disk(config('admin.upload_disk'));
                     });

@@ -75,6 +75,28 @@ class WxPayService{
     }
 
     /**
+     * 退款
+     *
+     * @param string $order_no 此订单编号是支付记录的订单编号，而非订单数据中的订单编号
+     * @param integer|float $money
+     * @return void
+     */
+    public function refund(string $order_no, int|float $money){
+        Pay::config($this->config);
+        $order = [
+            'out_trade_no' => $order_no,
+            'out_refund_no' => '' . time(),
+            'amount' => [
+                'refund' => intval($money * 100),
+                'total' => intval($money * 100),
+                'currency' => 'CNY',
+            ],
+        ];
+        $result = Pay::wechat()->refund($order);
+        return $result;
+    }
+
+    /**
      * 支付回调验证
      * 微信的支付回调验证返回中包含订单编号
      *

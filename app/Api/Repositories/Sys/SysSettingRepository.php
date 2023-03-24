@@ -33,7 +33,15 @@ class SysSettingRepository{
      * @return void
      */
     private function set_redis($id){
-        $res = Redis::setnx("setting:{$id}", $this->eloquentClass::where('id', $id)->value('value'));
+        $data = $this->eloquentClass::where('id', $id)->first();
+        $value = '';
+        if($data){
+            $value = $data->value;
+            if($data->input_type == 'select'){
+                $value = explode(',', $data->remark)[$data->value];
+            }
+        }
+        $res = Redis::setnx("setting:{$id}", $value);
         return $res;
     }
 }

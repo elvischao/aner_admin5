@@ -12,6 +12,7 @@
         "laravel/framework": "^9.18",
         "laravel/sanctum": "^2.14.1",
         "laravel/tinker": "^2.7",
+        "medz/cors": "^1.5",
         "socialiteproviders/weixin": "^4.1",
         "yansongda/laravel-pay": "~3.1.0",
         "zgldh/qiniu-laravel-storage": "^9.0"

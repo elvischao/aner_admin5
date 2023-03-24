@@ -21,6 +21,10 @@ Route::post('sys/article/category', [\App\Api\Controllers\SysController::class, 
 Route::post('sys/article/list', [\App\Api\Controllers\SysController::class, 'article_list']);
 Route::post('sys/article/detail', [\App\Api\Controllers\SysController::class, 'article_detail']);
 
+Route::match(['get', 'post'], 'wxpay/notify', [\App\Api\Controllers\PayController::class, 'wxpay_notify']);
+Route::match(['get', 'post'], 'alipay/notify', [\App\Api\Controllers\PayController::class, 'alipay_notify']);
+Route::match(['get', 'post'], 'iospay/notify', [\App\Api\Controllers\PayController::class, 'iospay_notify']);
+
 Route::group([
     'middleware' => ['user.token'],
 ], function(Router $router){

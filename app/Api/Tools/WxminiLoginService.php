@@ -25,6 +25,8 @@ class WxminiRegisterService{
 
     /**
      * 获取openid， 如果此用户还没有注册，则直接注册
+     * 
+     * 当前小程序的政策为：所有用户解析出来的昵称和头像都是微信默认，所以我们可以不需要 iv 和 encryptedData 参数。
      *
      * @param [type] $code
      * @param [type] $iv
@@ -33,13 +35,14 @@ class WxminiRegisterService{
      */
     public function get_openid($code, $iv, $encryptedData, $parent_id){
         $data = $this->jscode2session($code);
-        $nickname = '';
-        $avatar = '';
-        if($iv != '' && $encryptedData != ''){
-            $user_info = $this->decryptData($this->appid, $data['session_key'], $encryptedData, $iv);
-            $nickname = $user_info['nickName'];
-            $avatar = $user_info['avatarUrl'];
-        }
+        $nickname = "微信用户";
+        $avatar = "https://thirdwx.qlogo.cn/mmopen/vi_32/POgEwh4mIHO4nibH0KlMECNjjGxQUq24ZEaGT4poC6icRiccVGKSyXwibcPq4BWmiaIGuG1icwxaQX6grC9VemZoJ8rg/132";
+        // TODO::不解析微信用户信息
+        // if($iv != '' && $encryptedData != ''){
+        //     $user_info = $this->decryptData($this->appid, $data['session_key'], $encryptedData, $iv);
+        //     $nickname = $user_info['nickName'];
+        //     $avatar = $user_info['avatarUrl'];
+        // }
         $user = $this->repository->base_use_fields_get_data([['third_party', '=', '微信小程序'], ['openid', '=', $data['openid']]]);
         if(!$user){
             (new UserLoginService())->register('', '', '', '', '', $avatar, $nickname, '', $parent_id, '微信小程序', $data['openid'], '');
