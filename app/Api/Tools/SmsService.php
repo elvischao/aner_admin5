@@ -22,6 +22,7 @@ class SmsService{
             default:
                 throwBusinessException('请传入正确的发送类型');
         }
+        return $this->send($type, $phone, $params);
     }
 
     /**

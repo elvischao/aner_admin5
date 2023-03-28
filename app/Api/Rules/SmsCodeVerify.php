@@ -16,9 +16,11 @@ class SmsCodeVerify implements Rule, DataAwareRule{
     }
 
     public function passes($attribute, $value){
-        if($this->data['sms_code'] == '123456'){
+        // 如果在开发模式下，可使用通用验证码通过验证
+        if(config("admin.developer_mode") && $this->data['sms_code'] == '123456'){
             return true;
         }
+        // 判断验证码是否正确
         if(empty($this->data['phone'])){
             $UsersRepository = new UsersRepository();
             $user = $UsersRepository->base_use_fields_get_data([['id', '=', $this->data['uid']]], ['phone']);
