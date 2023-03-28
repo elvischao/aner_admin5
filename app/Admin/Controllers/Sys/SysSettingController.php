@@ -38,7 +38,9 @@ class SysSettingController extends BaseController{
             $grid->column('id')->sortable()->width('10%');
             $grid->column('title')->width("20%");
             $grid->column('value')->width("50%")->setAttributes(['style'=> 'word-break:break-all;'])->if(function($column){
-                if($this->input_type == 'text'){
+                if($this->input_type == 'number'){
+                    return $column->textarea();
+                }elseif($this->input_type == 'text'){
                     return $column->textarea();
                 }elseif($this->input_type == 'onoff'){
                     return $column->switch();
@@ -99,7 +101,7 @@ class SysSettingController extends BaseController{
             $form->display('id');
             $form->select('parent_id')->options((new SysSetting())->get_parent_list());
             $form->text('title');
-            $form->select('input_type')->options(['text'=> '普通字符', 'select'=> '下拉选项', 'redio'=> '单选项', 'onoff'=> '开关'])->when(['select', 'redio'], function(Form $form){
+            $form->select('input_type')->options(['number'=> '数字', 'text'=> '普通字符', 'select'=> '下拉选项', 'redio'=> '单选项', 'onoff'=> '开关'])->when(['select', 'redio'], function(Form $form){
                 $form->tags('remark')->help('仅在select、redio类型的表单中有效，每个选项以逗号隔开');
             });
             if(config('admin.developer_mode')){
@@ -109,6 +111,9 @@ class SysSettingController extends BaseController{
             $form->footer(function ($footer) {
                 $footer->disableViewCheck();
             });
+            if($form->model()->input_type == 'number' && ctype_digit($form->value) == false){
+                $form->responseValidationMessages('value', '请输入纯数字');
+            }
             $form->saving(function (Form $form) {
                 $form->value = $form->value ?? '';
                 if($form->isCreating()){

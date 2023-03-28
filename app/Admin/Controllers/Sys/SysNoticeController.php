@@ -38,14 +38,18 @@ class SysNoticeController extends BaseController{
                     $grid->disableCreateButton();
                     $grid->disableFilter();
                     break;
+                case "多条文字":
+                    $grid->column('id')->sortable();
+                    $grid->column('title')->width("50%");
+                    break;
                 case '多条富文本':
                     $grid->column('id')->sortable();
-                    $grid->column('title');
+                    $grid->column('title')->width("40%");
                     break;
                 default:
                     SysNoticeModel::init();
                     $grid->column('');
-                    $grid->column('title');
+                    $grid->column('title')->width("60%");
                     $grid->disableViewButton();
                     $grid->disableDeleteButton();
                     $grid->disableCreateButton();

@@ -35,6 +35,15 @@ class SysService{
                 $data->content = $data->title;
                 unset($data->title);
                 break;
+            case "多条文字":
+                if($id == 0){
+                    throwBusinessException('当前公告模式设置为多条，请使用 get_notice_list 接口或传递 id 参数!');
+                }
+                $data = $SysNoticeRepository->base_use_fields_get_data([['id', '=', $id]], ['id', 'title', 'image']);
+                if($sys_image_show){
+                    unset($data->image);
+                }
+                break;
             case "单条富文本":
                 $data = $SysNoticeRepository->base_use_fields_get_data([], ['id', 'title', 'content', 'image']);
                 if($sys_image_show){
@@ -65,7 +74,8 @@ class SysService{
      */
     public function get_notice_list(int $page = 1, int $limit = 10):\Illuminate\Database\Eloquent\Collection{
         $SysNoticeRepository = new SysNoticeRepository();
-        if(config('admin.notice.type') != '多条富文本'){
+        $notice_type = config('admin.notice.type');
+        if($notice_type != '多条富文本' && $notice_type != '多条文字'){
             throwBusinessException('当前公告模式设置为单条，请直接使用 get_notice 接口');
         }
         $data = $SysNoticeRepository->base_use_fields_get_list([], $page, $limit, ['id', 'desc'], ['id', 'title', 'content', 'image']);
